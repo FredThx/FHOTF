@@ -7,26 +7,31 @@ import time
 import logging
 
 from watchdog.observers import Observer
-from watchdog.events import LoggingEventHandler
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
 
-
-class handler(FileSystemEventHandler):
+class FDebounceHandler(FileSystemEventHandler):
     '''Gestionnaire d'evenements
+    avec
+        - des fichier ignorés
+        - un système qui vérifie que les fichiers sont bien terminés
     '''
+    # Une extension pour renommer le fichier
     _ = "_$8$_"
+    # Les fichiers ignorés par defaut (regex)
     _ignored = ['.*\.crdownload', 'thumbs.db']
 
-    def __init__(self, delay = 15, timeout = 600, ignored = None):
+    def __init__(self, callback, delay = 15, timeout = 600, ignored = None):
         '''
+            callback    :   function callback(filename)
             delay       :   temps (second) entre chaque test
             timeout     :   temps (second) entre la creation et l'abandon de l'action
             ignored     :   si None : les valeurs par default, sinon list des expressions régulière à ignorer
         '''
         self.delay = delay
         self.timeout = timeout
+        self.callback = callback
         if ignored is None:
             ignored = self._ignored
         self.ignored = re.compile("|".join(ignored))
@@ -61,6 +66,7 @@ class handler(FileSystemEventHandler):
                 time.sleep(self.delay)
                 try:
                     new_size = os.path.getsize(filename)
+                    logging.debug("new_size : %s"%new_size)
                 except OSError:
                     file_abort = True
                     break
@@ -81,12 +87,12 @@ class handler(FileSystemEventHandler):
                 logging.debug("Timeout expected.")
             else:
                 logging.debug("Creation of %s finish!"%filename)
-                #TODO : faire quelque chose
+                self.callback(filename)
         else:
             logging.debug("%s ignored."%filename)
 
 
-class WatchdogService:
+class FWatchdogService:
     '''Notre chien de garde
     '''
 
@@ -115,15 +121,12 @@ class WatchdogService:
         self.observer.join()
 
 
-
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
     path = sys.argv[1] if len(sys.argv) > 1 else '.'
-    event_handler = handler()
-    service = WatchdogService()
+    event_handler = FDebounceHandler()
+    service = FWatchdogService()
     service.add_schedule(event_handler, path)
     service.run()
