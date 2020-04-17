@@ -51,7 +51,7 @@ class Smtp:
         text = message.as_string()
         session.sendmail(sender_address, receiver_address, text)
         session.quit()
-        logging.debug("Email send!")
+        logging.debug("Email %s send!"%subject)
 
 if __name__ == "__main__":
     smtp = Smtp('smtp.gmail.com', 587, 'fredthxdev@gmail.com', "555dcfg8***")
