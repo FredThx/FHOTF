@@ -1,6 +1,7 @@
 TODO
 
-- exclure les repertoires backup
+- exclure les repertoires backup (cas des hotfolder recursifs)
   - soit y ajouter un fichier .backup
   - soit créer une liste de ces fichiers à exclure.
 - quand un fichier .hotfolder est modifié : le deamon est aussi modifié
+- rajouter quelques variables autres que {filename} pour sujet et body

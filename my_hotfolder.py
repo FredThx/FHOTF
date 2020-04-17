@@ -10,6 +10,6 @@ my_logging(console_level = DEBUG, logfile_level = INFO, details = False)
 
 smtp = Smtp('smtp.gmail.com', 587, 'fredthxdev@gmail.com', "555dcfg8***")
 
-hotfolders = Hotfolders('.', smtp)
+hotfolders = Hotfolders('/mnt/e/Hotfolder/', smtp)
 
 hotfolders.run()

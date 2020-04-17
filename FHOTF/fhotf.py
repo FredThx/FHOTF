@@ -108,6 +108,7 @@ class FDebounceHandler(FileSystemEventHandler):
 
 class FWatchdogService:
     '''Notre chien de garde
+    avec un seul thread (observer)
     '''
 
     def __init__(self):

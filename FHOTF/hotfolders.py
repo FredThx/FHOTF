@@ -55,35 +55,45 @@ class Hotfolders:
                     timeout = config_hotfolder.get('timeout')
                     ignored = config_hotfolder.get('ignored', [])
                     ignored.append(self.config_file_name) # TODO.....
-                    actions = []
+                    actions = list()
                     #Email action
                     if 'email' in config_actions:
-                        try:
-                            to = config_actions['email']['to']
-                        except keyError:
-                            logging.error("key error (email) in .hotfolder file : %s"%config_file)
-                        else:
-                            subject = config_actions['email'].get('subject',self.default_subject)
-                            body = config_actions['email'].get('body')
-                            actions.append(lambda filename : self.smtp.send(to, subject, body, filename))
+                        #Pour isoler les variables locales!
+                        def inner():
+                            try:
+                                to = config_actions['email']['to']
+                            except keyError:
+                                logging.error("key error (email) in .hotfolder file : %s"%config_file)
+                            else:
+                                subject = config_actions['email'].get('subject',self.default_subject)
+                                body = config_actions['email'].get('body')
+                                def f_email(filename):
+                                    logging.debug("Send Email %s"%subject)
+                                    self.smtp.send(to, subject.format(filename=filename), body.format(filename=filename), filename)
+                                actions.append(f_email)
+                                logging.debug("Crt action email (subject:%s)"%subject)
+                        inner()
                     if 'delete' in config_actions:
                         if config_actions['delete'].get('backup'):
-                            backup_folder = root / pathlib.Path(config_actions['delete'].get('backup_folder'))
-                            add_date = config_actions['delete'].get('add_date')
-                            try:
-                                os.mkdir(backup_folder)
-                            except FileExistsError:
-                                pass
-                            def move(filename):
-                                filename = pathlib.Path(filename)
-                                if add_date:
-                                    date = datetime.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
-                                else:
-                                    date = ""
-                                target = backup_folder / (filename.stem + date + filename.suffix)
-                                logging.debug("Move file %s to %s"%(filename, target))
-                                os.rename(filename, target)
-                            actions.append(move)
+                            #Pour isoler les variables locales!
+                            def inner():
+                                backup_folder = root / pathlib.Path(config_actions['delete'].get('backup_folder'))
+                                add_date = config_actions['delete'].get('add_date')
+                                try:
+                                    os.mkdir(backup_folder)
+                                except FileExistsError:
+                                    pass
+                                def f_move(filename):
+                                    filename = pathlib.Path(filename)
+                                    if add_date:
+                                        date = datetime.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
+                                    else:
+                                        date = ""
+                                    target = backup_folder / (filename.stem + date + filename.suffix)
+                                    logging.debug("Move file %s to %s"%(filename, target))
+                                    os.rename(filename, target)
+                                actions.append(f_move)
+                            inner()
                         else:
                             actions.append(lambda filename : os.remove(filename))
                     handler = FDebounceHandler(actions, delay, timeout, ignored)
