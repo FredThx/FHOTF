@@ -1,8 +1,5 @@
 TODO
 
-
-- Supprimer après envoie
-
 - exclure les repertoires backup
   - soit y ajouter un fichier .backup
   - soit créer une liste de ces fichiers à exclure.

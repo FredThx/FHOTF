@@ -1,7 +1,13 @@
 # FHOTF
 Python scripts to create hotfolders.
+(windows or linux system)
 
-##Installation
+Currently :
+- detect creation or move of files
+- send file by email (or not)
+- delete or backup file (or not)
+
+## Installation
 
 TODO
 
