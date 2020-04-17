@@ -1,7 +1,6 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
 from email.mime.application import MIMEApplication
 from email import encoders
 from pathlib import Path
@@ -36,16 +35,13 @@ class Smtp:
         message['From'] = sender_address
         message['To'] = receiver_address
         message['Subject'] = subject
-        #The subject line
-        #The body and the attachments for the mail
+        #The body
         message.attach(MIMEText(body, 'plain'))
+        # the attachment file
         if attach_file_name:
             attach_file_name = Path(attach_file_name)
-            #payload = MIMEBase('application', 'octate-stream')
             with open(str(attach_file_name), 'rb') as attach_file: # Open the file as binary mode
                 payload=MIMEApplication(attach_file.read(), _subtype = attach_file_name.suffix)
-            #encoders.encode_base64(payload) #encode the attachment
-            #add payload header with filename
             payload.add_header('Content-Disposition', 'attachment', filename=attach_file_name.name)
             message.attach(payload)
         #Create SMTP session for sending the mail

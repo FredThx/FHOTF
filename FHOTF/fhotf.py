@@ -22,18 +22,26 @@ class FDebounceHandler(FileSystemEventHandler):
     # Les fichiers ignorés par defaut (regex)
     _ignored = ['.*\.crdownload', 'thumbs.db']
 
-    def __init__(self, callback, delay = 15, timeout = 600, ignored = None):
+    def __init__(self, actions = None, delay = 15, timeout = 600, ignored = None):
         '''
-            callback    :   function callback(filename)
+            actions    :   function callback(filename) or listof
             delay       :   temps (second) entre chaque test
             timeout     :   temps (second) entre la creation et l'abandon de l'action
             ignored     :   si None : les valeurs par default, sinon list des expressions régulière à ignorer
         '''
         self.delay = delay
         self.timeout = timeout
-        self.callback = callback
+        self.actions = []
+        if actions:
+            if type(actions) == list:
+                self.actions += actions
+            else:
+                self.action.append(actions)
         if ignored is None:
-            ignored = self._ignored
+            ignored = []
+        elif type(ignored)!=list:
+            ignored = [ignored]
+        ignored += self._ignored
         self.ignored = re.compile("|".join(ignored))
         super().__init__()
 
@@ -45,6 +53,11 @@ class FDebounceHandler(FileSystemEventHandler):
         if not (event.dest_path.endswith(self._) or event.src_path.endswith(self._)):
             logging.info(event)
             self.do_action(event.dest_path)
+
+    def add_action(self, callback):
+        '''Add a new action
+        '''
+        self.actions.append(callback)
 
     def do_action(self, filename):
         '''Quand creation
@@ -87,7 +100,8 @@ class FDebounceHandler(FileSystemEventHandler):
                 logging.debug("Timeout expected.")
             else:
                 logging.debug("Creation of %s finish!"%filename)
-                self.callback(filename)
+                for callback in self.actions:
+                    callback(filename)
         else:
             logging.debug("%s ignored."%filename)
 
