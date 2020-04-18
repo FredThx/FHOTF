@@ -54,7 +54,8 @@ class Hotfolders:
                     delay = config_hotfolder.get('delay')
                     timeout = config_hotfolder.get('timeout')
                     ignored = config_hotfolder.get('ignored', [])
-                    ignored.append(self.config_file_name) # TODO.....
+                    only = config_hotfolder.get('only', [])
+                    ignored.append(self.config_file_name) # TODO.....quand modif de ce fichier.
                     actions = list()
                     #Email action
                     if 'email' in config_actions:
@@ -96,5 +97,5 @@ class Hotfolders:
                             inner()
                         else:
                             actions.append(lambda filename : os.remove(filename))
-                    handler = FDebounceHandler(actions, delay, timeout, ignored)
+                    handler = FDebounceHandler(actions, delay, timeout, ignored, only)
                     self.service.add_schedule(handler, root, recursive)

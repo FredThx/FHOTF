@@ -10,6 +10,7 @@ my_logging(console_level = DEBUG, logfile_level = INFO, details = False)
 
 smtp = Smtp('smtp.gmail.com', 587, 'fredthxdev@gmail.com', "555dcfg8***")
 
-hotfolders = Hotfolders('/mnt/e/Hotfolder/', smtp)
+path = sys.argv[1] if len(sys.argv) > 1 else '/mnt/e/Hotfolder/'
+hotfolders = Hotfolders(path, smtp)
 
 hotfolders.run()

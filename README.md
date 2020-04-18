@@ -25,7 +25,7 @@ title = "Hotfolder"
 recursive = false
 delay = 15
 timeout = 600
-ignored = ['.*\.tmp'] # regex expression
+ignored = ['*.tmp']
 
 #Actions générées
 [actions]

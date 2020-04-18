@@ -7,11 +7,11 @@ import time
 import logging
 
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers.polling import PollingObserver
 
 
-class FDebounceHandler(FileSystemEventHandler):
+class FDebounceHandler(PatternMatchingEventHandler):
     '''Gestionnaire d'evenements
     avec
         - des fichier ignorés
@@ -20,9 +20,9 @@ class FDebounceHandler(FileSystemEventHandler):
     # Une extension pour renommer le fichier
     _ = "_$8$_"
     # Les fichiers ignorés par defaut (regex)
-    _ignored = ['.*\.crdownload', 'thumbs.db']
+    _ignored = ['*.crdownload', 'thumbs.db']
 
-    def __init__(self, actions = None, delay = 15, timeout = 600, ignored = None):
+    def __init__(self, actions = None, delay = 15, timeout = 600, ignored = None, only = None):
         '''
             actions    :   function callback(filename) or listof
             delay       :   temps (second) entre chaque test
@@ -37,13 +37,20 @@ class FDebounceHandler(FileSystemEventHandler):
                 self.actions += actions
             else:
                 self.action.append(actions)
-        if ignored is None:
-            ignored = []
-        elif type(ignored)!=list:
-            ignored = [ignored]
-        ignored += self._ignored
-        self.ignored = re.compile("|".join(ignored))
-        super().__init__()
+        ignored = self.arrange_pattern(ignored, self._ignored)
+        only = self.arrange_pattern(only)
+        super().__init__(patterns = only, ignore_patterns = ignored, ignore_directories = True)
+
+    @staticmethod
+    def arrange_pattern(pattern, default = None):
+        if pattern is None:
+            pattern = []
+        elif type(pattern)!=list:
+            pattern = [pattern]
+        if default:
+            pattern += default
+        return  ["*/" + i for i in pattern]
+
 
     def on_created(self, event):
         logging.info(event)
@@ -62,7 +69,7 @@ class FDebounceHandler(FileSystemEventHandler):
     def do_action(self, filename):
         '''Quand creation
         '''
-        if self.ignored.fullmatch(filename)==None:
+        if True: # on va vérifier backup
             logging.debug("do_action('%s')"%filename)
             timeout = time.time() + self.timeout
             filename_ = filename + self._
