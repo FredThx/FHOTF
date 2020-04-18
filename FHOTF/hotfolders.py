@@ -88,7 +88,7 @@ class Hotfolders:
                                 body = config_actions['email'].get('body')
                                 def f_email(filename):
                                     logging.debug("Send Email %s"%subject)
-                                    self.smtp.send(to, subject.format(filename=filename), body.format(filename=filename), filename)
+                                    self.smtp.send(to, subject, body, filename)
                                 actions.append(f_email)
                                 logging.debug("Crt action email (subject:%s)"%subject)
                         inner()

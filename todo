@@ -1,3 +1,5 @@
 TODO
 
-- rajouter quelques variables autres que {filename} pour sujet et body
+- création d'autres actions (move, copy, script)
+- deamon on_change, on_delete
+- parse le fichier pour y trouver une émail (ex : pdf avec adresse)

@@ -26,6 +26,9 @@ class Smtp:
     def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None, sender_pass = None ):
         ''' Send a message
         '''
+        dict_file = self.dict_file(attach_file_name)
+        subject  = subject.format(**dict_file)
+        body = body.format(**dict_file)
         if sender_address is None:
             sender_address = self.sender_address
         if sender_pass is None:
@@ -52,6 +55,18 @@ class Smtp:
         session.sendmail(sender_address, receiver_address, text)
         session.quit()
         logging.debug("Email %s send!"%subject)
+
+    @staticmethod
+    def dict_file(filename):
+        filename = Path(filename)
+        return {
+            'filename' : str(filename),
+            'name' : filename.name,
+            'suffix' : filename.suffix,
+            'path' : filename.parent,
+            'basename' : filename.stem,
+            }
+
 
 if __name__ == "__main__":
     smtp = Smtp('smtp.gmail.com', 587, 'fredthxdev@gmail.com', "555dcfg8***")
