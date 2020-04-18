@@ -22,6 +22,10 @@ class Smtp:
         self.port = port
         self.sender_address = sender_address
         self.sender_pass = sender_pass
+        logging.debug(f"{self} created.")
+
+    def __repr__(self):
+        return f"Smpt({self.host}:{self.port}(user:{self.sender_address}/{self.sender_pass}))"
 
     def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None, sender_pass = None ):
         ''' Send a message
@@ -54,7 +58,7 @@ class Smtp:
         text = message.as_string()
         session.sendmail(sender_address, receiver_address, text)
         session.quit()
-        logging.debug("Email (%)s send!"%subject)
+        logging.debug(f"Email ({subject}) send!")
 
     @staticmethod
     def dict_file(filename):
@@ -66,6 +70,15 @@ class Smtp:
             'path' : filename.parent,
             'basename' : filename.stem,
             }
+
+class NoneSmtp():
+    '''A do-nothig Smtp class
+    '''
+    def __init__(self):
+        logging.info("Create de do-nothing Smtp class")
+
+    def send(self, *args, **kwargs):
+        logging.info("No-send nothing.")
 
 
 if __name__ == "__main__":

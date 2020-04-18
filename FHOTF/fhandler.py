@@ -24,7 +24,7 @@ class FHandler(PatternMatchingEventHandler):
         '''
         ignored = self.arrange_pattern(ignored, self._ignored)
         only = self.arrange_pattern(only)
-        logging.debug("Create PatternMatchingEventHandler with only = %s and ignored = %s"%(only, ignored))
+        logging.debug(f"Create PatternMatchingEventHandler with only = {only} and ignored = {ignored}")
         PatternMatchingEventHandler.__init__(self, patterns = only, ignore_patterns = ignored, ignore_directories = True)
 
     @staticmethod
@@ -84,7 +84,7 @@ class FDebounceHandler(FHandler):
     def do_action(self, filename):
         '''Quand creation
         '''
-        logging.debug("do_action('%s')"%filename)
+        logging.debug(f"do_action('{filename}')")
         timeout = time.time() + self.timeout
         filename_ = filename + self._
         file_lock = True
@@ -96,18 +96,18 @@ class FDebounceHandler(FHandler):
             file_abort = True
             size = -1
         while (size_change or file_lock) and time.time() < timeout and (not file_abort):
-            logging.debug("Check file status in %s seconds"%self.delay)
+            logging.debug(f"Check file status in {self.delay} seconds")
             time.sleep(self.delay)
             try:
                 new_size = os.path.getsize(filename)
-                logging.debug("new_size : %s"%new_size)
+                logging.debug(f"new_size : {new_size}")
             except OSError:
                 file_abort = True
                 break
             size_change = size != new_size
             if size_change:
                 size = new_size
-                logging.debug("File size change : %s"%size)
+                logging.debug(f"File size change : {size}")
             else:
                 try:
                     os.rename(filename, filename_)
@@ -120,7 +120,7 @@ class FDebounceHandler(FHandler):
         elif file_lock and size_change:
             logging.debug("Timeout expected.")
         else:
-            logging.debug("Creation of %s id valid."%filename)
+            logging.debug(f"Creation of {filename} id valid.")
             for callback in self.actions:
                 callback(filename)
 

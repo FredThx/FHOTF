@@ -64,16 +64,16 @@ class Hotfolders:
         for root, dirs, files in os.walk(self.path):
             root = pathlib.Path(root)
             if self.config_file_name in files:
-                logging.debug("%s found in %s"%(self.config_file_name, root))
+                logging.debug(f"{self.config_file_name} found in {root}")
                 config_file = root / pathlib.Path(self.config_file_name)
                 try:
                     config=toml.load(config_file)
                     config_hotfolder=config['hotfolder']
                     config_actions = config['actions']
                 except toml.decoder.TomlDecodeError:
-                    logging.error("Error parsing %s"%config_file)
+                    logging.error(f"Error parsing {config_file}")
                 except keyError:
-                    logging.error("key error in .hotfolder file : %s"%config_file)
+                    logging.error(f"key error in .hotfolder file : {config_file}")
                 else:
                     recursive = False#config_hotfolder.get('recursive')
                     delay = config_hotfolder.get('delay')
@@ -89,14 +89,14 @@ class Hotfolders:
                             try:
                                 to = config_actions['email']['to']
                             except keyError:
-                                logging.error("key error (email) in .hotfolder file : %s"%config_file)
+                                logging.error(f"key error (email) in .hotfolder file : {config_file}")
                             else:
                                 subject = config_actions['email'].get('subject',self.default_subject)
                                 body = config_actions['email'].get('body')
                                 def f_email(filename):
                                     self.smtp.send(to, subject, body, filename)
                                 actions.append(f_email)
-                                logging.debug("Crt action email (subject:'%s')"%subject)
+                                logging.debug(f"Crt action email (subject:'{subject}')")
                         inner()
                     if 'delete' in config_actions:
                         if config_actions['delete'].get('backup'):
@@ -116,7 +116,7 @@ class Hotfolders:
                                     else:
                                         date = ""
                                     target = backup_folder / (filename.stem + date + filename.suffix)
-                                    logging.debug("Move file %s to %s"%(filename, target))
+                                    logging.debug(f"Move file {filename} to {target}")
                                     os.rename(filename, target)
                                 actions.append(f_move)
                                 logging.debug("Crt action delete")

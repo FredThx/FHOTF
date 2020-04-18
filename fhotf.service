@@ -1,0 +1,14 @@
+[Unit]
+Description= Holfolders
+After=network.target
+
+[Service]
+ExecStart=python3 fhotf.py -o smtp.yyyy.com -u xxx@zzz.com -w secret -f /hotfolder_path
+#Restart=always
+RestartSec=10s
+KillMode=process
+TimeoutSec=infinity
+User=root
+RemainAfterExit=no
+
+[Install]

@@ -9,7 +9,23 @@ Currently :
 
 ## Installation
 
-TODO
+### On linux
+
+#### from sources
+
+```bash
+sudo python3 setup.py install
+```
+
+Change /opt/FHOTF/fhotf.service with your config
+
+```bash
+sudo systemctl enable /opt/FHOTF/fhotf.service
+sudo systemctl start fhotf.service
+```
+### On windows
+
+(...)
 
 ## Usage
 
@@ -47,18 +63,10 @@ ignored = ['*.tmp']
 
 ### Deamon
 
-Next, you can execute the script :
+Next, you can execute the command :
 
-```python
-
-from FHOTF.smtp import Smtp
-from FHOTF.hotfolders import Hotfolders
-
-smtp = Smtp('smtp.domain.com', 587, 'sender@domain.com', "*******")
-
-hotfolders = Hotfolders('.', smtp)
-
-hotfolders.run()
+```
+usage: python fhotf.py [-h] [-o HOST] [-p PORT] [-u USER] [-w PASSWORD] [-f PATH] [-v]
 ```
 
 ## license
