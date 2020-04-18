@@ -22,7 +22,6 @@ title = "Hotfolder"
 
 #Général information
 [hotfolder]
-recursive = false
 delay = 15
 timeout = 600
 ignored = ['*.tmp']

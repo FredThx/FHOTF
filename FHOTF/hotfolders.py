@@ -50,7 +50,7 @@ class Hotfolders:
                 except keyError:
                     logging.error("key error in .hotfolder file : %s"%config_file)
                 else:
-                    recursive = config_hotfolder.get('recursive')
+                    recursive = False#config_hotfolder.get('recursive')
                     delay = config_hotfolder.get('delay')
                     timeout = config_hotfolder.get('timeout')
                     ignored = config_hotfolder.get('ignored', [])
@@ -80,6 +80,7 @@ class Hotfolders:
                             def inner():
                                 backup_folder = root / pathlib.Path(config_actions['delete'].get('backup_folder'))
                                 add_date = config_actions['delete'].get('add_date')
+                                #création si besoin du repertoir backup
                                 try:
                                     os.mkdir(backup_folder)
                                 except FileExistsError:
