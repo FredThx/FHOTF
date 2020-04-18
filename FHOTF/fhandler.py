@@ -116,11 +116,11 @@ class FDebounceHandler(FHandler):
                 except OSError:
                     logging.debug("File lock.")
         if file_abort:
-            logging.debug("Le fichier a disparu!")
+            logging.debug("The file has disappeared!")
         elif file_lock and size_change:
             logging.debug("Timeout expected.")
         else:
-            logging.debug("Creation of %s finish!"%filename)
+            logging.debug("Creation of %s id valid."%filename)
             for callback in self.actions:
                 callback(filename)
 
@@ -136,6 +136,5 @@ class FSysHandler(FHandler):
         FHandler.__init__(self, only = only)
 
     def on_any_event(self, event):
-        logging.debug("Système event : %s"%event)
-        logging.info("Une modification sur un fichier .hotfolder a été détecté.")
+        logging.info("A modification on a .hotfolder file was detected.")
         self.callback()

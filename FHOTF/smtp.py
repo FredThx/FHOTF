@@ -54,7 +54,7 @@ class Smtp:
         text = message.as_string()
         session.sendmail(sender_address, receiver_address, text)
         session.quit()
-        logging.debug("Email %s send!"%subject)
+        logging.debug("Email (%)s send!"%subject)
 
     @staticmethod
     def dict_file(filename):

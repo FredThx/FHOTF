@@ -30,14 +30,21 @@ class Hotfolders:
         self.path = path
         self.observer = PollingObserver()
         self.sys_observer = PollingObserver()
-        logging.info("WatchdogService Initlialised")
+        logging.info("WatchdogServices Initialised")
         self.smtp = smtp
         self.scan()
         self.crt_sys_deamon()
 
-    def run(self):
+    def start(self):
+        '''Start th deamons
+        '''
         self.observer.start()
         self.sys_observer.start()
+
+    def run(self):
+        '''Run forever
+        '''
+        self.start()
         try:
             while True:
                 time.sleep(1)
@@ -51,7 +58,7 @@ class Hotfolders:
     def scan(self):
         '''Scan all the hotfolders
         '''
-        logging.info("\n\n(Ré)Initilisation des deamons et scanne du repertoire.\n")
+        logging.info("\n(Ré)Initilisation des deamons et scanne du repertoire.\n")
         # Supprime tous les anciens programmes
         self.observer.unschedule_all()
         for root, dirs, files in os.walk(self.path):
@@ -87,10 +94,9 @@ class Hotfolders:
                                 subject = config_actions['email'].get('subject',self.default_subject)
                                 body = config_actions['email'].get('body')
                                 def f_email(filename):
-                                    logging.debug("Send Email %s"%subject)
                                     self.smtp.send(to, subject, body, filename)
                                 actions.append(f_email)
-                                logging.debug("Crt action email (subject:%s)"%subject)
+                                logging.debug("Crt action email (subject:'%s')"%subject)
                         inner()
                     if 'delete' in config_actions:
                         if config_actions['delete'].get('backup'):
@@ -113,11 +119,13 @@ class Hotfolders:
                                     logging.debug("Move file %s to %s"%(filename, target))
                                     os.rename(filename, target)
                                 actions.append(f_move)
+                                logging.debug("Crt action delete")
                             inner()
                         else:
                             actions.append(lambda filename : os.remove(filename))
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only)
                     self.observer.schedule(handler, root, recursive)
+        logging.info("\nScan finished.\n")
 
     def crt_sys_deamon(self):
         ''' Va créer un observer pour la détection des changements dans les fichiers '.hotfolder'
