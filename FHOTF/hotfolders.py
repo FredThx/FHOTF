@@ -2,12 +2,14 @@
 # -*- coding:utf-8 -*
 
 
-import toml
-import os, pathlib, datetime, logging
+import os, pathlib, datetime, logging, time
 
-from FHOTF.fhotf import FDebounceHandler
-from FHOTF.fhotf import FWatchdogService
+import toml
+
+from watchdog.observers.polling import PollingObserver
+from FHOTF.fhandler import *
 from FHOTF.smtp import Smtp
+
 
 
 class Hotfolders:
@@ -26,16 +28,32 @@ class Hotfolders:
         smtp    :   Smtp (FHOTF.smtp) instance
         '''
         self.path = path
-        self.service = FWatchdogService()
+        self.observer = PollingObserver()
+        self.sys_observer = PollingObserver()
+        logging.info("WatchdogService Initlialised")
         self.smtp = smtp
         self.scan()
+        self.crt_sys_deamon()
 
     def run(self):
-        self.service.run()
+        self.observer.start()
+        self.sys_observer.start()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.sys_observer.stop()
+            self.observer.stop()
+        self.sys_observer.join()
+        self.observer.join()
+
 
     def scan(self):
         '''Scan all the hotfolders
         '''
+        logging.info("\n\n(Ré)Initilisation des deamons et scanne du repertoire.\n")
+        # Supprime tous les anciens programmes
+        self.observer.unschedule_all()
         for root, dirs, files in os.walk(self.path):
             root = pathlib.Path(root)
             if self.config_file_name in files:
@@ -99,4 +117,10 @@ class Hotfolders:
                         else:
                             actions.append(lambda filename : os.remove(filename))
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only)
-                    self.service.add_schedule(handler, root, recursive)
+                    self.observer.schedule(handler, root, recursive)
+
+    def crt_sys_deamon(self):
+        ''' Va créer un observer pour la détection des changements dans les fichiers '.hotfolder'
+        '''
+        sys_handler = FSysHandler(only=self.config_file_name, callback = self.scan)
+        self.sys_observer.schedule(sys_handler, self.path, True)

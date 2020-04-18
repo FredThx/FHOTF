@@ -1,4 +1,3 @@
 TODO
 
-- quand un fichier .hotfolder est modifié : le deamon est aussi modifié
 - rajouter quelques variables autres que {filename} pour sujet et body
