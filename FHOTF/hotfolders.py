@@ -9,8 +9,7 @@ import toml
 from watchdog.observers.polling import PollingObserver
 from FHOTF.fhandler import *
 from FHOTF.smtp import Smtp
-
-
+from FHOTF.systray import Fsystray
 
 class Hotfolders:
     '''Une arborescences de hotfodders
@@ -21,8 +20,9 @@ class Hotfolders:
 
     config_file_name = '.hotfolder'
     default_subject = "Hotfolder alert."
+    settings_filename = 'fhotf.ini'
 
-    def __init__(self, path, smtp = None):
+    def __init__(self, path, smtp = None, gui = False):
         '''
         path    :   root path
         smtp    :   Smtp (FHOTF.smtp) instance
@@ -32,27 +32,52 @@ class Hotfolders:
         self.sys_observer = PollingObserver()
         logging.info("WatchdogServices Initialised")
         self.smtp = smtp
+        self.gui = gui
+        if not self.path:
+            if not self.restore_setting():
+                self.path = '.'
         self.scan()
         self.crt_sys_deamon()
 
-    def start(self):
-        '''Start th deamons
+    def change_path(self, path):
+        '''Change the root path
         '''
+        self.path = path
+        self.store_setting()
+        self.scan()
+
+    def start(self):
+        '''Start the deamons
+        '''
+        logging.info("Start Holfoders.")
         self.observer.start()
         self.sys_observer.start()
+
+    def stop(self):
+        '''Stop all
+        '''
+        logging.info("Stop Holfoders.")
+        self.sys_observer.stop()
+        self.observer.stop()
+        self.sys_observer.join()
+        self.observer.join()
 
     def run(self):
         '''Run forever
         '''
         self.start()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            self.sys_observer.stop()
-            self.observer.stop()
-        self.sys_observer.join()
-        self.observer.join()
+        if self.gui:
+            try:
+                Fsystray(self).run()
+            except AssertionError:
+                logging.warning("Systray cannot be laught. No gui available. Remove the --gui option or install pystray and easygui and use a os with gui.")
+        else:
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                pass
+        self.stop
 
 
     def scan(self):
@@ -132,3 +157,28 @@ class Hotfolders:
         '''
         sys_handler = FSysHandler(only=self.config_file_name, callback = self.scan)
         self.sys_observer.schedule(sys_handler, self.path, True)
+
+    def restore_setting(self):
+        '''restore the settings from self.settings_filename
+        return True if done
+        '''
+        try:
+            settings = toml.load(self.settings_filename)
+        except FileNotFoundError:
+            logging.warning(f"{self.filename} not present.")
+        else:
+            if 'path' in settings:
+                self.path = settings['path']
+                return True
+
+    def store_setting(self):
+        '''Store the settings
+        return True if done
+        '''
+        settings = {'path':self.path}
+        try:
+            with open("self.settings_filename", 'w') as settings_file:
+                toml.dump(settings, settings_file)
+            return True
+        except (OSError, IOError):
+            logging.error("Unable to save settings.")

@@ -1,3 +1,5 @@
 FUTIL
 watchdog
 toml
+pystray
+easygui

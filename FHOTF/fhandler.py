@@ -120,7 +120,7 @@ class FDebounceHandler(FHandler):
         elif file_lock and size_change:
             logging.debug("Timeout expected.")
         else:
-            logging.debug(f"Creation of {filename} id valid.")
+            logging.debug(f"Creation of {filename} is valid.")
             for callback in self.actions:
                 callback(filename)
 

@@ -20,6 +20,8 @@ parser.add_argument("-u","--user", help="SMTP user", action="store")
 parser.add_argument("-w","--password", help = "SMTP password", action="store")
 parser.add_argument("-f","--path", help = "Root path for hotfolders", action="store", default = '.')
 parser.add_argument("-v","--verbose", help = "Debug mode", action="store_true")
+parser.add_argument("-g","--gui", help = "Debug mode", action="store_true")
+
 args = parser.parse_args()
 
 if args.verbose:
@@ -33,6 +35,6 @@ if not args.host or not args.user or not args.password:
 else:
     smtp = Smtp(args.host, args.port, args.user, args.password)
 
-hotfolders = Hotfolders(args.path, smtp)
+hotfolders = Hotfolders(args.path, smtp, gui = args.gui)
 
 hotfolders.run()
