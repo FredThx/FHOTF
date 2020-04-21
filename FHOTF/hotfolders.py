@@ -11,6 +11,7 @@ from FHOTF.fhandler import *
 from FHOTF.smtp import Smtp, NoneSmtp
 from FHOTF.systray import Fsystray
 from FHOTF.settings import KeyFSettings
+from FHOTF.__init__ import __version__
 
 class Hotfolders:
     '''Une arborescences de hotfodders
@@ -22,9 +23,9 @@ class Hotfolders:
     config_file_name = '.hotfolder'
     default_subject = "Hotfolder alert."
     default_settings_key = 'FHOTKEY'
-    saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user', 'smtp_password']
+    saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user_addr', 'smtp_user', 'smtp_password']
 
-    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False):
+    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False):
         '''
         path    :   root path
         smtp    :   Smtp (FHOTF.smtp) instance
@@ -38,12 +39,14 @@ class Hotfolders:
             self.smtp_host = smtp_host
         if smtp_port:
             self.smtp_port = smtp_port
+        if smtp_user_addr:
+            self.smtp_user_addr = smtp_user
         if smtp_user:
             self.smtp_user = smtp_user
         if smtp_password:
             self.smtp_password = smtp_password
         if self.smtp_host:
-            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user, self.smtp_password)
+            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user_addr, self.smtp_user, self.smtp_password)
         else:
             self.smtp = NoneSmtp()
         self.gui = gui
@@ -79,10 +82,10 @@ class Hotfolders:
     def change_settings(self, settings):
         '''Change the settings (from systray)
         '''
-        settings['smtp_password']="*******"
-        logging.info(f"Settings change (from systray) : {settings}")
         # TODO : faire un peu de vérification
         self.__dict__.update(settings)
+        settings['smtp_password']="*******"
+        logging.info(f"Settings change (from systray) : {settings}")
         self.store_settings()
         self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user, self.smtp_password)
         self.scan()
@@ -194,6 +197,9 @@ class Hotfolders:
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only)
                     self.observer.schedule(handler, root, recursive)
         logging.info("\nScan finished.\n")
+
+    def version(self):
+        return __version__
 
     def crt_sys_deamon(self):
         ''' Va créer un observer pour la détection des changements dans les fichiers '.hotfolder'

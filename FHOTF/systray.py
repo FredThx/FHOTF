@@ -5,10 +5,11 @@ try:
 except:
     NO_GUI=True
 
-
 import os
 import logging
-logging.getLogger("PIL").setLevel(logging.ERROR)
+logging.getLogger("PySimpleGUIQt").setLevel(logging.ERROR)
+
+from FHOTF.smtp import Smtp
 
 class Fsystray:
     ''' Une interface à base de systray pour piloter Hotfolder
@@ -42,10 +43,22 @@ class Fsystray:
             [sg.Text("Smtp :")],
             [sg.Text('   Host : '), sg.InputText(key = 'smtp_host', default_text = self.hotfolders.smtp_host)],
             [sg.Text('   Port :'),sg.InputText(key = 'smtp_port', default_text = self.hotfolders.smtp_port)],
-            [sg.Text('   Sender :'), sg.InputText(key = 'smtp_user', default_text = self.hotfolders.smtp_user)],
+            [sg.Text('   Sender email :'), sg.InputText(key = 'smtp_user_addr', default_text = self.hotfolders.smtp_user_addr)],
+            [sg.Text('   User (optional) :'), sg.InputText(key = 'smtp_user', default_text = self.hotfolders.smtp_user)],
             [sg.Text('   Password :'), sg.InputText(key='smtp_password', password_char="*", default_text = self.hotfolders.smtp_password)],
+            [sg.Button("Send test email...", tooltip = "Send a email to sender email.", key = 'test')],
             [sg.Cancel(),sg.OK()] ])
-        event, values = window.Read()
+        while True:
+            event, values = window.Read()
+            if event in (None, 'Cancel', 'OK'):
+                break
+            elif event == 'test':
+                smtp = Smtp(values['smtp_host'], values['smtp_port'], values['smtp_user_addr'], values['smtp_user'], values['smtp_password'])
+                if smtp.send(values['smtp_user_addr'], "Hotfolders test","Your hotfolders email configuration is correct!"):
+                    sg.popup('Email send correctly.',keep_on_top = True)
+                else:
+                    sg.popup_error('Error with smtp configuration.', keep_on_top = True)
+
         if event == 'OK':
             self.hotfolders.change_settings(values)
         window.close()
@@ -53,7 +66,14 @@ class Fsystray:
     def help(self):
         '''Help link
         '''
-        sg.popup('Please visit : https://github.com/FredThx/FHOTF', title=self.title)
+        sg.popup(f'''
+            hotfolders
+            Autor : FredThx
+            version : {self.hotfolders.version()}
+
+            Please visit : https://github.com/FredThx/FHOTF\n''',
+            #size = (80,10),
+            title=self.title)
 
     def run(self):
         '''run forever the systray

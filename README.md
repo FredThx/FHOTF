@@ -26,6 +26,14 @@ pip install -r requirements.txt
 In each folder you want to make an hotfolder : a .hotfolder file
 
 ```toml
+# Fichier de configuration pour FHOTF
+#
+# Ce fichier doit être nommé '.hotfolder'
+# Il s'applique au repertoir dans lequel il est présent
+#
+# Syntaxe : TOML
+#
+
 title = "Hotfolder"
 
 #Général information
@@ -33,22 +41,25 @@ title = "Hotfolder"
 delay = 15
 timeout = 600
 ignored = ['*.tmp']
+only = ['*.txt']
 
 #Actions générées
 [actions]
 
   [actions.email]
   to = "fredthx@gmail.com"
-  subject = "Hotfolder detect a new file"
+  subject = "Hotfolder detect a new file : {filename}"
   body ='''
-  Un nouveau fichier {filename} est arrivé sur le hotfolder.
-  Ci-joint ce fichier.
+  Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
+  Ci-joint ce fichier {suffix}.
+
+  Nom du fichier sans l'extention : {basename}
 
   Salut.'''
 
   [actions.delete]
   backup = true
-  backup_folder = './backup/'
+  backup_folder = './sav/'
   add_date = true
 
 ```

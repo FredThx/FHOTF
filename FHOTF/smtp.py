@@ -11,24 +11,28 @@ class Smtp:
     ''' Un client smtp
     '''
 
-    def __init__(self, host, port = 587, sender_address = None, sender_pass = None):
+    def __init__(self, host, port = 587, sender_address = None, sender = None, sender_pass = None):
         '''Initialisation
         - host            :     hostname or IP
         - port            :     TCP-IP port
         - sender_address  :     ex : "toto@gmail.com"
         - sender_pass     :     password
+        - sender          :     sender user (if != sender_address)
         '''
         self.host = host
         self.port = port
         self.sender_address = sender_address
+        self.sender = sender or sender_address
         self.sender_pass = sender_pass
         logging.debug(f"{self} created.")
 
     def __repr__(self):
-        return f"Smpt({self.host}:{self.port}(user:{self.sender_address}/{self.sender_pass}))"
+        return f"Smpt({self.host}:{self.port}(user:{self.sender}/{self.sender_pass}))"
 
-    def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None, sender_pass = None ):
+
+    def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None):
         ''' Send a message
+        return True si ok
         '''
         if attach_file_name:
             dict_file = self.dict_file(attach_file_name)
@@ -36,8 +40,6 @@ class Smtp:
             body = body.format(**dict_file)
         if sender_address is None:
             sender_address = self.sender_address
-        if sender_pass is None:
-            sender_pass = self.sender_pass
         #Setup the MIME
         message = MIMEMultipart()
         message['From'] = sender_address
@@ -52,14 +54,20 @@ class Smtp:
                 payload=MIMEApplication(attach_file.read(), _subtype = attach_file_name.suffix)
             payload.add_header('Content-Disposition', 'attachment', filename=attach_file_name.name)
             message.attach(payload)
-        #Create SMTP session for sending the mail
-        session = smtplib.SMTP(self.host, self.port)
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass)
         text = message.as_string()
-        session.sendmail(sender_address, receiver_address, text)
-        session.quit()
-        logging.debug(f"Email ({subject}) send!")
+        #Create SMTP session for sending the mail
+        try:
+            session = smtplib.SMTP(self.host, self.port)
+            session.ehlo()
+            session.starttls() #enable security
+            session.login(self.sender, self.sender_pass)
+            session.sendmail(sender_address, receiver_address, text)
+            logging.debug(f"Email ({subject}) send!")
+            session.quit()
+            return True
+        except Exception as e:
+            logging.error(f"Smtp error : {e}")
+
 
     @staticmethod
     def dict_file(filename):
