@@ -1,5 +1,5 @@
 FUTIL
 watchdog
 toml
-pystray
-easygui
+PySimpleGUIQt
+keyring

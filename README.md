@@ -7,12 +7,17 @@ Currently :
 - send file by email (or not)
 - delete or backup file (or not)
 
+optionnal :
+- system tray icon UI
+- autosave parameters and credentials (keyring)
+
 ## Installation
 
 ### On linux
 
-#### from sources
+#### with systemd
 
+from sources
 ```bash
 sudo python3 setup.py install
 ```
@@ -23,6 +28,9 @@ Change /opt/FHOTF/fhotf.service with your config
 sudo systemctl enable /opt/FHOTF/fhotf.service
 sudo systemctl start fhotf.service
 ```
+
+####
+
 ### On windows
 
 (...)
@@ -61,12 +69,31 @@ ignored = ['*.tmp']
 
 ```
 
-### Deamon
+### Command
 
 Next, you can execute the command :
 
 ```
-usage: python fhotf.py [-h] [-o HOST] [-p PORT] [-u USER] [-w PASSWORD] [-f PATH] [-v]
+usage: python fhotf.py [-h] [-o HOST] [-p PORT] [-u USER] [-w PASSWORD]
+                       [-f PATH] [-v] [-n] [-k SETTINGSKEY] [-s] [-d]
+
+Find .hotfolder files and manage hotfolders.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o HOST, --host HOST  SMTP host
+  -p PORT, --port PORT  SMTP port (default=587)
+  -u USER, --user USER  SMTP user
+  -w PASSWORD, --password PASSWORD
+                        SMTP password
+  -f PATH, --path PATH  Root path for hotfolders
+  -v, --verbose         Debug mode
+  -n, --nogui           no systray
+  -k SETTINGSKEY, --settingskey SETTINGSKEY
+                        a key for settings
+  -s, --store           store command line parameters
+  -d, --delete          delete all saved parameters
+
 ```
 
 ## license

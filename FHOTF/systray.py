@@ -22,8 +22,8 @@ class Fsystray:
         '''
         self.hotfolders = hotfolders
         if not NO_GUI:
-            menu_def = ['BLANK', ['&Open hotfolder::open', '&Change hotfolder::change', '&Help::help', '&Quit::quit']]
-            self.tray = sg.SystemTray(menu=menu_def, filename=r'hotfolder.png', tooltip = 'fhotf')
+            menu_def = ['BLANK', ['&Open hotfolder::open', '&Configuration::config', '&Help::help', '&Quit::quit']]
+            self.tray = sg.SystemTray(menu=menu_def, filename=r'icone.ico', tooltip = 'fhotf')
             logging.info("systray initialised.")
         else:
             logging.warning("systray not initialised.")
@@ -34,12 +34,21 @@ class Fsystray:
         '''
         os.startfile(self.hotfolders.path)
 
-    def change_hotfolder_path(self):
-        '''Une une fenêtre pour changer le hotfolder
+    def change_config(self):
+        '''Une une fenêtre pour changer les paramètres
         '''
-        rep = sg.popup_get_folder("Select the new hotfolder root :",self.title , self.hotfolders.path)
-        if rep:
-            self.hotfolders.change_path(rep)
+        window = sg.Window(self.title, [
+            [sg.Text("Hotfolder path : "), sg.InputText(key='path',default_text = self.hotfolders.path),sg.FolderBrowse(initial_folder = self.hotfolders.path)],
+            [sg.Text("Smtp :")],
+            [sg.Text('   Host : '), sg.InputText(key = 'smtp_host', default_text = self.hotfolders.smtp_host)],
+            [sg.Text('   Port :'),sg.InputText(key = 'smtp_port', default_text = self.hotfolders.smtp_port)],
+            [sg.Text('   Sender :'), sg.InputText(key = 'smtp_user', default_text = self.hotfolders.smtp_user)],
+            [sg.Text('   Password :'), sg.InputText(key='smtp_password', password_char="*", default_text = self.hotfolders.smtp_password)],
+            [sg.Cancel(),sg.OK()] ])
+        event, values = window.Read()
+        if event == 'OK':
+            self.hotfolders.change_settings(values)
+        window.close()
 
     def help(self):
         '''Help link
@@ -56,8 +65,8 @@ class Fsystray:
             logging.debug(f"SystemTray read {menu_item}.")
             if menu_item == "open":
                 self.open_hotfolder()
-            elif menu_item == "change":
-                self.change_hotfolder_path()
+            elif menu_item == "config":
+                self.change_config()
             elif menu_item == "help":
                 self.help()
             elif menu_item == "quit":

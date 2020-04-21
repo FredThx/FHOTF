@@ -8,8 +8,9 @@ import toml
 
 from watchdog.observers.polling import PollingObserver
 from FHOTF.fhandler import *
-from FHOTF.smtp import Smtp
+from FHOTF.smtp import Smtp, NoneSmtp
 from FHOTF.systray import Fsystray
+from FHOTF.settings import KeyFSettings
 
 class Hotfolders:
     '''Une arborescences de hotfodders
@@ -20,30 +21,70 @@ class Hotfolders:
 
     config_file_name = '.hotfolder'
     default_subject = "Hotfolder alert."
-    settings_filename = 'fhotf.ini'
+    default_settings_key = 'FHOTKEY'
+    saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user', 'smtp_password']
 
-    def __init__(self, path, smtp = None, gui = False):
+    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False):
         '''
         path    :   root path
         smtp    :   Smtp (FHOTF.smtp) instance
         '''
-        self.path = path
+
+        self.settings = KeyFSettings(settings_key or self.default_settings_key)
+        self.restore_settings()
+        if path:
+            self.path = path
+        if smtp_host:
+            self.smtp_host = smtp_host
+        if smtp_port:
+            self.smtp_port = smtp_port
+        if smtp_user:
+            self.smtp_user = smtp_user
+        if smtp_password:
+            self.smtp_password = smtp_password
+        if self.smtp_host:
+            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user, self.smtp_password)
+        else:
+            self.smtp = NoneSmtp()
+        self.gui = gui
+        if not self.path:
+            self.path = '.'
+        if settings_store:
+            self.store_settings()
+        if settings_delete:
+            self.delete_settings()
         self.observer = PollingObserver()
         self.sys_observer = PollingObserver()
         logging.info("WatchdogServices Initialised")
-        self.smtp = smtp
-        self.gui = gui
-        if not self.path:
-            if not self.restore_setting():
-                self.path = '.'
         self.scan()
         self.crt_sys_deamon()
 
-    def change_path(self, path):
-        '''Change the root path
+    def restore_settings(self):
+        '''Restore settings from keyring
         '''
-        self.path = path
-        self.store_setting()
+        settings = self.settings.get(self.saved_properties)
+        if settings:
+            self.__dict__.update(settings)
+
+    def store_settings(self):
+        '''Store settings on keyring
+        '''
+        self.settings.set({k:v for k,v in self.__dict__.items() if k in self.saved_properties})
+
+    def delete_settings(self):
+        '''Delete settings on keyring
+        '''
+        self.settings.delete(self.saved_properties)
+
+    def change_settings(self, settings):
+        '''Change the settings (from systray)
+        '''
+        settings['smtp_password']="*******"
+        logging.info(f"Settings change (from systray) : {settings}")
+        # TODO : faire un peu de vérification
+        self.__dict__.update(settings)
+        self.store_settings()
+        self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user, self.smtp_password)
         self.scan()
 
     def start(self):
@@ -157,28 +198,3 @@ class Hotfolders:
         '''
         sys_handler = FSysHandler(only=self.config_file_name, callback = self.scan)
         self.sys_observer.schedule(sys_handler, self.path, True)
-
-    def restore_setting(self):
-        '''restore the settings from self.settings_filename
-        return True if done
-        '''
-        try:
-            settings = toml.load(self.settings_filename)
-        except FileNotFoundError:
-            logging.warning(f"{self.filename} not present.")
-        else:
-            if 'path' in settings:
-                self.path = settings['path']
-                return True
-
-    def store_setting(self):
-        '''Store the settings
-        return True if done
-        '''
-        settings = {'path':self.path}
-        try:
-            with open("self.settings_filename", 'w') as settings_file:
-                toml.dump(settings, settings_file)
-            return True
-        except (OSError, IOError):
-            logging.error("Unable to save settings.")
