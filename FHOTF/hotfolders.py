@@ -138,8 +138,10 @@ class Hotfolders:
                     config_actions = config['actions']
                 except toml.decoder.TomlDecodeError:
                     logging.error(f"Error parsing {config_file}")
-                except keyError:
+                except KeyError:
                     logging.error(f"key error in .hotfolder file : {config_file}")
+                except Exception as e:
+                    logging.error(f"Unknow Error on {config_file} : {e}")
                 else:
                     recursive = False#config_hotfolder.get('recursive')
                     delay = config_hotfolder.get('delay')
@@ -154,7 +156,7 @@ class Hotfolders:
                         def inner():
                             try:
                                 to = config_actions['email']['to']
-                            except keyError:
+                            except KeyError:
                                 logging.error(f"key error (email) in .hotfolder file : {config_file}")
                             else:
                                 subject = config_actions['email'].get('subject',self.default_subject)

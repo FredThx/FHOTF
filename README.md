@@ -13,27 +13,11 @@ optionnal :
 
 ## Installation
 
-### On linux
-
-#### with systemd
+Need python >= 3.6
 
 from sources
-```bash
-sudo python3 setup.py install
-```
 
-Change /opt/FHOTF/fhotf.service with your config
-
-```bash
-sudo systemctl enable /opt/FHOTF/fhotf.service
-sudo systemctl start fhotf.service
-```
-
-####
-
-### On windows
-
-(...)
+pip install -r requirements.txt
 
 ## Usage
 
@@ -95,6 +79,11 @@ optional arguments:
   -d, --delete          delete all saved parameters
 
 ```
+or
+For a gui system just ```python fhotf.py``` and do the configuration with the SystemTray icon.
+
+For command line, execute the command with all parameters a first time with ```--store``` argument. The next time only ```python fhotf.py``` is needed.
+
 
 ## license
 [CeCILL-fr](https://cecill.info/licences/Licence_CeCILL_V2.1-fr.html)

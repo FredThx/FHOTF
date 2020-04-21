@@ -30,9 +30,10 @@ class Smtp:
     def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None, sender_pass = None ):
         ''' Send a message
         '''
-        dict_file = self.dict_file(attach_file_name)
-        subject  = subject.format(**dict_file)
-        body = body.format(**dict_file)
+        if attach_file_name:
+            dict_file = self.dict_file(attach_file_name)
+            subject  = subject.format(**dict_file)
+            body = body.format(**dict_file)
         if sender_address is None:
             sender_address = self.sender_address
         if sender_pass is None:
