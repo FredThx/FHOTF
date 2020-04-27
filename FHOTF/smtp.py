@@ -22,7 +22,7 @@ class Smtp:
         self.host = host
         self.port = port
         self.sender_address = sender_address
-        self.sender = sender or sender_address
+        self.sender = sender
         self.sender_pass = sender_pass
         logging.debug(f"{self} created.")
 
@@ -38,6 +38,8 @@ class Smtp:
             dict_file = self.dict_file(attach_file_name)
             subject  = subject.format(**dict_file)
             body = body.format(**dict_file)
+        if sender_address is None:
+            sender_address = self.sender_address
         #Setup the MIME
         message = MIMEMultipart()
         message['From'] = sender_address
@@ -55,11 +57,13 @@ class Smtp:
         text = message.as_string()
         #Create SMTP session for sending the mail
         try:
+            #logging.debug(f"Smtp session : host:{self.host}, port:{self.port}, sender:{self.sender}, sender_pass:{self.sender_pass}  ")
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
             session.starttls() #enable security
             if self.sender:
                 try:
+                    logging.debug(f"login{self.sender}")
                     session.login(self.sender, self.sender_pass)
                 except:
                     pass

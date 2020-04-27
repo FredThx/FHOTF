@@ -28,7 +28,7 @@ parser.add_argument("-d","--delete", help = "delete all saved parameters", actio
 args = parser.parse_args()
 
 if args.verbose:
-    my_logging(console_level = DEBUG, logfile_level = INFO, details = False)
+    my_logging(console_level = DEBUG, logfile_level = INFO, details = True)
 else:
     my_logging(console_level = INFO, logfile_level = INFO, details = False)
 
