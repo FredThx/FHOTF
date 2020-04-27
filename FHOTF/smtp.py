@@ -38,8 +38,6 @@ class Smtp:
             dict_file = self.dict_file(attach_file_name)
             subject  = subject.format(**dict_file)
             body = body.format(**dict_file)
-        if sender_address is None:
-            sender_address = self.sender_address
         #Setup the MIME
         message = MIMEMultipart()
         message['From'] = sender_address
@@ -60,7 +58,11 @@ class Smtp:
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
             session.starttls() #enable security
-            session.login(self.sender, self.sender_pass)
+            if self.sender:
+                try:
+                    session.login(self.sender, self.sender_pass)
+                except:
+                    pass
             session.sendmail(sender_address, receiver_address, text)
             logging.debug(f"Email ({subject}) send!")
             session.quit()
