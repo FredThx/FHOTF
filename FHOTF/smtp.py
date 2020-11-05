@@ -60,7 +60,7 @@ class Smtp:
             #logging.debug(f"Smtp session : host:{self.host}, port:{self.port}, sender:{self.sender}, sender_pass:{self.sender_pass}  ")
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
-            session.starttls() #enable security
+            #session.starttls() #enable security
             if self.sender:
                 try:
                     logging.debug(f"login{self.sender}")
