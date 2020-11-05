@@ -18,18 +18,21 @@ only = ['*.txt']
 #Actions générées
 [actions]
 
+  [actions.before]
+      cmd = "python C:\\Users\\FRED\\Documents\\GitHub\\txt2pdf\\txt2pdf.py -s 7 -L 0.5 -R 0 {filename} -o {path}\{basename}.pdf"
+
   [actions.email]
-  to = "jcoopmann@hexanet.fr"
-  subject = "Hotfolder detect a new file : {filename}"
-  body ='''
-  Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
-  Ci-joint ce fichier {suffix}.
+    to = "frederic.thome@olfa.fr"
+    subject = "Hotfolder detect a new file : {filename}"
+    body ='''
+    Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
+    Ci-joint ce fichier {suffix}.
 
-  Nom du fichier sans l'extention : {basename}
+    Nom du fichier sans l'extention : {basename}
 
-  Salut.'''
+    Salut.'''
 
   [actions.delete]
-  backup = true
-  backup_folder = './sav/'
-  add_date = true
+    backup = true
+    backup_folder = './sav/'
+    add_date = true

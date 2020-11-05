@@ -121,6 +121,7 @@ class FDebounceHandler(FHandler):
             logging.debug("Timeout expected.")
         else:
             logging.debug(f"Creation of {filename} is valid.")
+            logging.debug(f"Actions : {self.actions}")
             for callback in self.actions:
                 callback(filename)
 

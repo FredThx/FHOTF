@@ -6,6 +6,7 @@ from email import encoders
 from pathlib import Path
 import logging
 
+import FHOTF.utils as utils
 
 class Smtp:
     ''' Un client smtp
@@ -35,7 +36,7 @@ class Smtp:
         return True si ok
         '''
         if attach_file_name:
-            dict_file = self.dict_file(attach_file_name)
+            dict_file = utils.dict_file(attach_file_name)
             subject  = subject.format(**dict_file)
             body = body.format(**dict_file)
         if sender_address is None:
@@ -75,16 +76,6 @@ class Smtp:
             logging.error(f"Smtp error : {e}")
 
 
-    @staticmethod
-    def dict_file(filename):
-        filename = Path(filename)
-        return {
-            'filename' : str(filename),
-            'name' : filename.name,
-            'suffix' : filename.suffix,
-            'path' : filename.parent,
-            'basename' : filename.stem,
-            }
 
 class NoneSmtp():
     '''A do-nothig Smtp class

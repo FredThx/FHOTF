@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*
 
 
-import os, pathlib, datetime, logging, time
+import os, pathlib, datetime, logging, time, subprocess
 
 import toml
 
@@ -12,6 +12,8 @@ from FHOTF.smtp import Smtp, NoneSmtp
 from FHOTF.systray import Fsystray
 from FHOTF.settings import KeyFSettings
 from FHOTF.__init__ import __version__
+
+import FHOTF.utils as utils
 
 class Hotfolders:
     '''Une arborescences de hotfodders
@@ -139,6 +141,7 @@ class Hotfolders:
                     config=toml.load(config_file)
                     config_hotfolder=config['hotfolder']
                     config_actions = config['actions']
+                    logging.debug("config : %s"%config)
                 except toml.decoder.TomlDecodeError:
                     logging.error(f"Error parsing {config_file}")
                 except KeyError:
@@ -153,6 +156,26 @@ class Hotfolders:
                     only = config_hotfolder.get('only', [])
                     ignored.append(self.config_file_name) # TODO.....quand modif de ce fichier.
                     actions = list()
+                    #Before command
+                    if 'before' in config_actions:
+                        def inner(): #Pour isoler les variables locales!
+                            try:
+                                cmd = config_actions['before']['cmd']
+                            except KeyError:
+                                logging.error(f"key error (before) in .hotfolder file : {config_file}")
+                            else:
+                                def f_cmd(filename):
+                                    logging.debug(f"Cmd start : {cmd}")
+                                    _cmd = cmd.format(**utils.dict_file(filename))
+                                    logging.debug(utils.dict_file(filename))
+                                    logging.debug(_cmd)
+                                    completed_process = subprocess.run(_cmd)
+                                    if completed_process.returncode == 0:
+                                        logging.debug(f"Cmd ok : {completed_process.stdout}")
+                                    else:
+                                        logging.error("Cmd error : {completed_process.stderr}")
+                                actions.append(f_cmd)
+                        inner()
                     #Email action
                     if 'email' in config_actions:
                         #Pour isoler les variables locales!
