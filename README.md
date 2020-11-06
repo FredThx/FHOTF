@@ -47,6 +47,7 @@ only = ['*.txt']
 [actions]
 
   [actions.email]
+  txt2pdf = true
   to = "fredthx@gmail.com"
   subject = "Hotfolder detect a new file : {filename}"
   body ='''

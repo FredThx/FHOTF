@@ -18,10 +18,8 @@ only = ['*.txt']
 #Actions générées
 [actions]
 
-  [actions.before]
-      cmd = "python C:\\Users\\FRED\\Documents\\GitHub\\txt2pdf\\txt2pdf.py -s 7 -L 0.5 -R 0 {filename} -o {path}\{basename}.pdf"
-
   [actions.email]
+    txt2pdf = true
     to = "frederic.thome@olfa.fr"
     subject = "Hotfolder detect a new file : {filename}"
     body ='''

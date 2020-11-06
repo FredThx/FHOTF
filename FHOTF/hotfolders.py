@@ -12,6 +12,7 @@ from FHOTF.smtp import Smtp, NoneSmtp
 from FHOTF.systray import Fsystray
 from FHOTF.settings import KeyFSettings
 from FHOTF.__init__ import __version__
+import FHOTF.txt2pdf as TXT2PDF
 
 import FHOTF.utils as utils
 
@@ -187,8 +188,16 @@ class Hotfolders:
                             else:
                                 subject = config_actions['email'].get('subject',self.default_subject)
                                 body = config_actions['email'].get('body')
+                                txt2pdf = config_actions['email'].get('txt2pdf', False)
                                 def f_email(filename):
-                                    self.smtp.send(to, subject, body, filename)
+                                    if txt2pdf:
+                                        pdf_creator = TXT2PDF.PDFCreator(font_size = 7.0, margin_left = 0.5, margin_right = 0.0)
+                                        pdf_filename = pdf_creator.generate(filename)
+                                        logging.debug(f"Envoie email...to{to}, subject:{subject},pdf_filename:{pdf_filename}")
+                                        self.smtp.send(to, subject, body, pdf_filename)
+                                        #os.remove(pdf_filename)
+                                    else:
+                                        self.smtp.send(to, subject, body, filename)
                                 actions.append(f_email)
                                 logging.debug(f"Crt action email (subject:'{subject}')")
                         inner()
