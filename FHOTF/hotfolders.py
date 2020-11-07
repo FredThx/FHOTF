@@ -28,7 +28,7 @@ class Hotfolders:
     default_settings_key = 'FHOTKEY'
     saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user_addr', 'smtp_user', 'smtp_password']
 
-    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False):
+    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False, starttls = True):
         '''
         path    :   root path
         smtp    :   Smtp (FHOTF.smtp) instance
@@ -49,7 +49,7 @@ class Hotfolders:
         if smtp_password:
             self.smtp_password = smtp_password
         if self.smtp_host:
-            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user_addr, self.smtp_user, self.smtp_password)
+            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user_addr, self.smtp_user, self.smtp_password, starttls)
         else:
             self.smtp = NoneSmtp()
         self.gui = gui
@@ -190,12 +190,12 @@ class Hotfolders:
                                 body = config_actions['email'].get('body')
                                 txt2pdf = config_actions['email'].get('txt2pdf', False)
                                 def f_email(filename):
-                                    if txt2pdf:
+                                    if txt2pdf and filename[-4:]==".txt":
                                         pdf_creator = TXT2PDF.PDFCreator(font_size = 7.0, margin_left = 0.5, margin_right = 0.0)
                                         pdf_filename = pdf_creator.generate(filename)
                                         logging.debug(f"Envoie email...to{to}, subject:{subject},pdf_filename:{pdf_filename}")
                                         self.smtp.send(to, subject, body, pdf_filename)
-                                        #os.remove(pdf_filename)
+                                        os.remove(pdf_filename) # A améliorer car ca génère une detection de nouveau fichier.... qui n'aboutie pas
                                     else:
                                         self.smtp.send(to, subject, body, filename)
                                 actions.append(f_email)

@@ -12,19 +12,21 @@ class Smtp:
     ''' Un client smtp
     '''
 
-    def __init__(self, host, port = 587, sender_address = None, sender = None, sender_pass = None):
+    def __init__(self, host, port = 587, sender_address = None, sender = None, sender_pass = None, starttls = True):
         '''Initialisation
         - host            :     hostname or IP
         - port            :     TCP-IP port
         - sender_address  :     ex : "toto@gmail.com"
         - sender_pass     :     password
         - sender          :     sender user (if != sender_address)
+        - starttls        :     if True (default), use starttls before send email
         '''
         self.host = host
         self.port = port
         self.sender_address = sender_address
         self.sender = sender
         self.sender_pass = sender_pass
+        self.starttls = starttls
         logging.debug(f"{self} created.")
 
     def __repr__(self):
@@ -61,7 +63,8 @@ class Smtp:
             #logging.debug(f"Smtp session : host:{self.host}, port:{self.port}, sender:{self.sender}, sender_pass:{self.sender_pass}  ")
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
-            #session.starttls() #enable security
+            if self.starttls:
+                session.starttls()
             if self.sender:
                 try:
                     logging.debug(f"login{self.sender}")
