@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*
 
 
-import os, pathlib, datetime, logging, time, subprocess
+import os, pathlib, datetime, logging, time
 
 import toml
 
@@ -26,6 +26,7 @@ class Hotfolders:
     config_file_name = '.hotfolder'
     default_settings_key = 'FHOTKEY'
     saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user_addr', 'smtp_user', 'smtp_password']
+    actions_keywords = ['copy', 'before', 'email', 'move', 'delete', 'after'] # Order is important !
 
     def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False, starttls = True):
         '''
@@ -157,34 +158,19 @@ class Hotfolders:
                     ignored.append(self.config_file_name) # TODO.....quand modif de ce fichier.
                     no_empty_file = config_hotfolder.get('no_empty_file')
                     actions = list()
-                    #Before command
-                    if 'before' in config_actions:
-                        def inner(): #Pour isoler les variables locales!
-                            try:
-                                cmd = config_actions['before']['cmd']
-                            except KeyError:
-                                logging.error(f"key error (before) in .hotfolder file : {config_file}")
-                            else:
-                                def f_cmd(filename):
-                                    logging.debug(f"Cmd start : {cmd}")
-                                    _cmd = cmd.format(**utils.dict_file(filename))
-                                    logging.debug(utils.dict_file(filename))
-                                    logging.debug(_cmd)
-                                    completed_process = subprocess.run(_cmd)
-                                    if completed_process.returncode == 0:
-                                        logging.debug(f"Cmd ok : {completed_process.stdout}")
-                                    else:
-                                        logging.error("Cmd error : {completed_process.stderr}")
-                                actions.append(f_cmd)
-                        inner()
-                    #Email action
-                    if 'email' in config_actions:
-                        action = EmailAction(config_actions['email'], self.smtp)
-                        if action:
-                            actions.append(action.get_action())
-                    #Delete action
-                    if 'delete' in config_actions:
-                        action = DeleteAction(config_actions['delete'], root)
+                    for keyword in sorted([k for k in config_actions if k in self.actions_keywords], key = lambda k:self.actions_keywords.index(k)):
+                        action = None
+                        config_action = config_actions[keyword]
+                        if keyword == 'email':
+                            action = EmailAction(config_action, self.smtp)
+                        elif keyword == 'move':
+                            action = MoveAction(config_action, root)
+                        elif keyword == 'delete':
+                            action = DeleteAction(config_action, root)
+                        elif keyword in ['before', 'after']:
+                            action = CmdAction(config_action)
+                        elif keyword == 'copy':
+                            action = CopyAction(config_action, root)
                         if action:
                             actions.append(action.get_action())
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only,no_empty_file)

@@ -47,7 +47,14 @@ no_empty_file = true
 #Actions générées
 [actions]
 
+  [actions.before]
+  cmd = 'my_script'
+
+  [actions.copy]
+  destination = '/home/destination/'
+
   [actions.email]
+  no_empty_file = true
   txt2pdf = true
   to = "fredthx@gmail.com"
   subject = "Hotfolder detect a new file : {filename}"
@@ -59,10 +66,17 @@ no_empty_file = true
 
   Salut.'''
 
+  [actions.move]
+  destination = 'c:\temp'
+
   [actions.delete]
   backup = true
   backup_folder = './sav/'
   add_date = true
+
+  [actions.after]
+  cmd = 'my_script2'
+
 
 ```
 

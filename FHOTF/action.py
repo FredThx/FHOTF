@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*
 
-import logging, os, pathlib, datetime
+import logging, os, pathlib, datetime, subprocess, shutil
 import FHOTF.txt2pdf as TXT2PDF
 
 import FHOTF.utils as utils
@@ -86,7 +86,9 @@ class DeleteAction(Action):
         '''return the delete action
         '''
         if self.config.get('backup'):
-            backup_folder = self.root / pathlib.Path(self.config.get('backup_folder'))
+            backup_folder = pathlib.Path(self.config.get('backup_folder'))
+            if not backup_folder.is_absolute():
+                backup_folder = self.root / backup_folder
             add_date = self.config.get('add_date')
             #création si besoin du repertoir backup
             try:
@@ -106,3 +108,77 @@ class DeleteAction(Action):
             return f_move
         else:
             return lambda filename : os.remove(filename)
+
+class MoveAction(Action):
+    '''Subclass for move action
+    '''
+    keys_needed = ['destination']
+    def __init__(self, config_actions, root):
+        '''Initialisation
+            config_actions  :   dict issu de toml
+            root            :      the root path
+        '''
+        self.root = root
+        super().__init__(config_actions)
+
+    def _get_action(self):
+        '''Return the move action
+        '''
+        destination = pathlib.Path(self.config.get('destination'))
+        if not destination.is_absolute():
+            destination = self.root / destination
+        def f_move(filename):
+            filename = pathlib.Path(filename)
+            target = destination / (filename.stem + filename.suffix)
+            logging.debug(f"Move file {filename} to {target}")
+            try:
+                os.rename(filename, target)
+            except OSError:
+                shutil.move(filename,target)
+        logging.debug("Crt action move")
+        return f_move
+
+class CopyAction(Action):
+    '''Sub class copy action
+    '''
+    keys_needed = ['destination']
+    def __init__(self, config_actions, root):
+        '''Initialisation
+            config_actions  :   dict issu de toml
+            root            :      the root path
+        '''
+        self.root = root
+        super().__init__(config_actions)
+
+    def _get_action(self):
+        '''Return the copy action
+        '''
+        destination = pathlib.Path(self.config.get('destination'))
+        if not destination.is_absolute():
+            destination = self.root / destination
+        def f_copy(filename):
+            filename = pathlib.Path(filename)
+            target = destination / (filename.stem + filename.suffix)
+            logging.debug(f"Copy file {filename} to {target}")
+            shutil.copyfile(filename,target)
+        logging.debug("Crt action copy")
+        return f_copy
+
+class CmdAction(Action):
+    '''Sub class execute cmd action
+    '''
+    key_needed = ['cmd']
+
+    def _get_action(self):
+        '''Return the cmd action
+        '''
+        cmd = self.config.get('cmd')
+        def f_cmd(filename):
+            _cmd = cmd.format(**utils.dict_file(filename))
+            logging.debug(f"Cmd start : {_cmd}")
+            completed_process = subprocess.run(_cmd)
+            if completed_process.returncode == 0:
+                logging.debug(f"Cmd ok : {completed_process.stdout}")
+            else:
+                logging.error("Cmd error : {completed_process.stderr}")
+        return f_cmd
