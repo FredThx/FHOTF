@@ -26,9 +26,15 @@ class Action(object):
         try:
             for key_needed in self.keys_needed:
                 assert key_needed in self.config,f"key error ({key_needed} is require in .hotfolder file : {self.config}"
-            return self._get_action()
+            def f_action(filename):
+                if not self.config.get('no_empty_file') or os.path.getsize(filename) > 0:
+                    self._get_action()(filename)
+                else:
+                    logging.debug(f"File is empty : cancel action {self}")
+            return f_action
         except AssertionError:
             pass
+
 
 class EmailAction(Action):
     ''' Subclass for email action

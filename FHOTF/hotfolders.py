@@ -123,7 +123,7 @@ class Hotfolders:
                     time.sleep(1)
             except KeyboardInterrupt:
                 pass
-        self.stop
+        self.stop()
 
 
     def scan(self):
