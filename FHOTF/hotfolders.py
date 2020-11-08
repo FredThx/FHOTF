@@ -11,8 +11,8 @@ from FHOTF.fhandler import *
 from FHOTF.smtp import Smtp, NoneSmtp
 from FHOTF.systray import Fsystray
 from FHOTF.settings import KeyFSettings
+from FHOTF.action import *
 from FHOTF.__init__ import __version__
-import FHOTF.txt2pdf as TXT2PDF
 
 import FHOTF.utils as utils
 
@@ -24,7 +24,6 @@ class Hotfolders:
     '''
 
     config_file_name = '.hotfolder'
-    default_subject = "Hotfolder alert."
     default_settings_key = 'FHOTKEY'
     saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user_addr', 'smtp_user', 'smtp_password']
 
@@ -180,53 +179,14 @@ class Hotfolders:
                         inner()
                     #Email action
                     if 'email' in config_actions:
-                        #Pour isoler les variables locales!
-                        def inner():
-                            try:
-                                to = config_actions['email']['to']
-                            except KeyError:
-                                logging.error(f"key error (email) in .hotfolder file : {config_file}")
-                            else:
-                                subject = config_actions['email'].get('subject',self.default_subject)
-                                body = config_actions['email'].get('body')
-                                txt2pdf = config_actions['email'].get('txt2pdf', False)
-                                def f_email(filename):
-                                    if txt2pdf and filename[-4:]==".txt":
-                                        pdf_creator = TXT2PDF.PDFCreator(font_size = 7.0, margin_left = 0.5, margin_right = 0.0)
-                                        pdf_filename = pdf_creator.generate(filename)
-                                        logging.debug(f"Envoie email...to{to}, subject:{subject},pdf_filename:{pdf_filename}")
-                                        self.smtp.send(to, subject, body, pdf_filename)
-                                        os.remove(pdf_filename) # A améliorer car ca génère une detection de nouveau fichier.... qui n'aboutie pas
-                                    else:
-                                        self.smtp.send(to, subject, body, filename)
-                                actions.append(f_email)
-                                logging.debug(f"Crt action email (subject:'{subject}')")
-                        inner()
+                        action = EmailAction(config_actions['email'], self.smtp)
+                        if action:
+                            actions.append(action.get_action())
+                    #Delete action
                     if 'delete' in config_actions:
-                        if config_actions['delete'].get('backup'):
-                            #Pour isoler les variables locales!
-                            def inner():
-                                backup_folder = root / pathlib.Path(config_actions['delete'].get('backup_folder'))
-                                add_date = config_actions['delete'].get('add_date')
-                                #création si besoin du repertoir backup
-                                try:
-                                    os.mkdir(backup_folder)
-                                except FileExistsError:
-                                    pass
-                                def f_move(filename):
-                                    filename = pathlib.Path(filename)
-                                    if add_date:
-                                        date = datetime.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
-                                    else:
-                                        date = ""
-                                    target = backup_folder / (filename.stem + date + filename.suffix)
-                                    logging.debug(f"Move file {filename} to {target}")
-                                    os.rename(filename, target)
-                                actions.append(f_move)
-                                logging.debug("Crt action delete")
-                            inner()
-                        else:
-                            actions.append(lambda filename : os.remove(filename))
+                        action = DeleteAction(config_actions['delete'], root)
+                        if action:
+                            actions.append(action.get_action())
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only,no_empty_file)
                     self.observer.schedule(handler, root, recursive)
         logging.info("\nScan finished.\n")
