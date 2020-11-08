@@ -42,6 +42,7 @@ delay = 15
 timeout = 600
 ignored = ['*.tmp']
 only = ['*.txt']
+no_empty_file = true
 
 #Actions générées
 [actions]

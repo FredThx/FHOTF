@@ -156,6 +156,7 @@ class Hotfolders:
                     ignored = config_hotfolder.get('ignored', [])
                     only = config_hotfolder.get('only', [])
                     ignored.append(self.config_file_name) # TODO.....quand modif de ce fichier.
+                    no_empty_file = config_hotfolder.get('no_empty_file')
                     actions = list()
                     #Before command
                     if 'before' in config_actions:
@@ -226,7 +227,7 @@ class Hotfolders:
                             inner()
                         else:
                             actions.append(lambda filename : os.remove(filename))
-                    handler = FDebounceHandler(actions, delay, timeout, ignored, only)
+                    handler = FDebounceHandler(actions, delay, timeout, ignored, only,no_empty_file)
                     self.observer.schedule(handler, root, recursive)
         logging.info("\nScan finished.\n")
 
