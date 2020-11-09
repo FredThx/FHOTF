@@ -104,7 +104,7 @@ optional arguments:
                         a key for settings
   -s, --store           store command line parameters
   -d, --delete          delete all saved parameters
-
+  -a  --nostarttls      not use starttls
 ```
 or
 For a gui system just ```python fhotf.py``` and do the configuration with the SystemTray icon.
