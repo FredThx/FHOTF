@@ -25,7 +25,7 @@ parser.add_argument("-n","--nogui", help = "no systray", action="store_true")
 parser.add_argument("-k","--settingskey", help = "a key for settings", action="store")
 parser.add_argument("-s","--store", help = "store command line parameters", action="store_true")
 parser.add_argument("-d","--delete", help = "delete all saved parameters", action="store_true")
-parser.add_argument("-a","--starttls", help = "use starttls", action="store_true", default = True)
+parser.add_argument("-a","--nostarttls", help = "not use starttls", action="store_false")
 
 args = parser.parse_args()
 
@@ -34,6 +34,6 @@ if args.verbose:
 else:
     my_logging(console_level = INFO, logfile_level = INFO, details = False, name_logfile = args.log)
 
-hotfolders = Hotfolders(args.path, args.host, args.port, args.email, args.user, args.password, gui = not args.nogui, settings_key = args.settingskey, settings_store = args.store, settings_delete = args.delete, starttls = args.starttls)
+hotfolders = Hotfolders(args.path, args.host, args.port, args.email, args.user, args.password, gui = not args.nogui, settings_key = args.settingskey, settings_store = args.store, settings_delete = args.delete, starttls = args.nostarttls)
 
 hotfolders.run()

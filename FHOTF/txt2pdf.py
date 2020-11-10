@@ -91,6 +91,7 @@ class PDFCreator(object):
         self.keywords = keywords
         self.subject = subject
         self.output = output
+        self.minimum_page_length  = minimum_page_length
         output = self.get_output()
         self.canvas = Canvas(output, pagesize=(pageWidth, pageHeight))
         self.canvas.setCreator(self.appName)
@@ -197,17 +198,16 @@ class PDFCreator(object):
         page = self._newpage()
         for _, line in data:
             lineno += 1
-
             # Handle form feed characters.
             (line, pageBreakCount) = re.subn(r'\f', r'', line)
-            if pageBreakCount > 0 and lineno >= args.minimum_page_length:
+            if pageBreakCount > 0 and lineno >= self.minimum_page_length:
                 for _ in range(pageBreakCount):
                     self.canvas.drawText(page)
                     self.canvas.showPage()
                     lineno = 0
                     pageno += 1
                     page = self._newpage()
-                    if args.minimum_page_length > 0:
+                    if self.minimum_page_length > 0:
                         break
 
             page.textLine(line)
