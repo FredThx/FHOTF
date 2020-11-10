@@ -12,27 +12,17 @@ title = "Hotfolder"
 [hotfolder]
 delay = 5
 timeout = 600
-ignored = ['*.tmp']
+ignored = ['*.tmp','*.py','*.pyc']
 only = ['*.txt']
-no_empty_file = true
+no_empty_file = false
+module = "fonctions.py"
 
 #Actions générées
 [actions]
 
-  [actions.email]
-    no_empty_file = true
-    txt2pdf = true
-    to = "frederic.thome@olfa.fr"
-    subject = "Hotfolder detect a new file : {filename}"
-    body ='''
-    Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
-    Ci-joint ce fichier {suffix}.
-
-    Nom du fichier sans l'extention : {basename}
-
-    Salut.'''
-
-  [actions.delete]
-    backup = true
-    backup_folder = './sav/'
-    add_date = true
+  [actions.move]
+  txt2pdf = true
+  parse_pdf = true
+  [actions.move.destination]
+    function = "get_dest_path"
+    args = ["{filename}","{suffix}"]

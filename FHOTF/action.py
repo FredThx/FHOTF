@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*
 
-import logging, os, pathlib, datetime, subprocess, shutil
+import logging, os, pathlib, datetime, subprocess, shutil, importlib
 import FHOTF.txt2pdf as TXT2PDF
 
 import FHOTF.utils as utils
@@ -12,6 +12,7 @@ class Action(object):
     à partir d'actions lues dans .hotfolder
     '''
     keys_needed = []
+    MODULE_NAME = "$$MODULE_NAME$$"
     def __init__(self, config_actions):
         '''Initialisation
         config_action  :   dict issu de toml
@@ -35,6 +36,17 @@ class Action(object):
         except AssertionError:
             pass
 
+    def get_function(self, function_name):
+        '''Return a function named function_name from module
+        '''
+        if self.config.get('module'):
+            module_path = pathlib.Path(self.config.get('module'))
+            if not module_path.is_absolute():
+                module_path = self.root / module_path
+            spec = importlib.util.spec_from_file_location(self.MODULE_NAME,module_path )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return getattr(module, function_name)
 
 class EmailAction(Action):
     ''' Subclass for email action
@@ -124,12 +136,24 @@ class MoveAction(Action):
     def _get_action(self):
         '''Return the move action
         '''
-        destination = pathlib.Path(self.config.get('destination'))
-        if not destination.is_absolute():
-            destination = self.root / destination
+        destination = self.config.get('destination')
+        if isinstance(destination,dict):
+            the_function = self.get_function(destination.get('function'))
+            destination = lambda *args : pathlib.Path(the_function(*args))
+        else :
+            destination = pathlib.Path(destination)
         def f_move(filename):
             filename = pathlib.Path(filename)
-            target = destination / (filename.stem + filename.suffix)
+            if callable(destination):
+                args = []
+                logging.debug("Arguments for lambda fonction")
+                for arg in self.config.get("destination").get('args'):
+                     args.append(arg.format(**utils.dict_file(filename)))
+                logging.debug(args)
+                _destination = destination(*args)
+            if not _destination.is_absolute():
+                _destination = self.root / _destination
+            target = _destination / (filename.stem + filename.suffix)
             logging.debug(f"Move file {filename} to {target}")
             try:
                 os.rename(filename, target)

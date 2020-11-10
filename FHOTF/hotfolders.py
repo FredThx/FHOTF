@@ -150,17 +150,21 @@ class Hotfolders:
                 except Exception as e:
                     logging.error(f"Unknow Error on {config_file} : {e}")
                 else:
-                    recursive = False#config_hotfolder.get('recursive')
+                    recursive = config_hotfolder.get('recursive', False)
                     delay = config_hotfolder.get('delay')
                     timeout = config_hotfolder.get('timeout')
                     ignored = config_hotfolder.get('ignored', [])
                     only = config_hotfolder.get('only', [])
-                    ignored.append(self.config_file_name) # TODO.....quand modif de ce fichier.
+                    ignored.append(self.config_file_name)
                     no_empty_file = config_hotfolder.get('no_empty_file')
+                    module = config_hotfolder.get('module')
+                    if module:
+                        ignored.append(str(root / module))
                     actions = list()
                     for keyword in sorted([k for k in config_actions if k in self.actions_keywords], key = lambda k:self.actions_keywords.index(k)):
                         action = None
                         config_action = config_actions[keyword]
+                        config_action['module'] = module
                         if keyword == 'email':
                             action = EmailAction(config_action, self.smtp)
                         elif keyword == 'move':

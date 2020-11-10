@@ -43,6 +43,7 @@ timeout = 600
 ignored = ['*.tmp']
 only = ['*.txt']
 no_empty_file = true
+module = "mymodule.py"
 
 #Actions générées
 [actions]
@@ -67,7 +68,12 @@ no_empty_file = true
   Salut.'''
 
   [actions.move]
-  destination = 'c:\temp'
+  txt2pdf = true
+  parse_pdf = true
+  [actions.move.destination]
+    function = "get_dest_path"
+    args = ["{filename}"]
+  
 
   [actions.delete]
   backup = true
