@@ -13,6 +13,5 @@ def get_cmd(filename):
 def get_destination_path_for_copy(filename):
     return './olfa/'
 
-
 def get_txt2pdf(filename):
     return False

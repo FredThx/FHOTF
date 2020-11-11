@@ -57,7 +57,11 @@ class Action(object):
                 args = []
                 for arg in _args:
                     args.append(arg.format(**utils.dict_file(filename)))
-                value = _function(*args)
+                try:
+                    value = _function(*args)
+                except Exception as e:
+                    logging.warning(f"Error in user_function {key}: {e}")
+                    value = None
         else:
             value = self.config.get(key)
         logging.debug(f"get_config({key},{repr(filename)},{default}) = '{repr(value)}'")
@@ -172,6 +176,7 @@ class MoveAction(Action):
             try:
                 os.rename(filename, target)
             except OSError:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
                 shutil.move(filename,target)
         logging.debug("Crt action move")
         return f_move
@@ -202,6 +207,7 @@ class CopyAction(Action):
                     destination = self.root / destination
                 target = destination / (filename.stem + filename.suffix)
                 logging.debug(f"Copy file {filename} to {target}")
+                os.makedirs(os.path.dirname(target), exist_ok=True)
                 shutil.copyfile(filename,target)
         logging.debug("Crt action copy")
         return f_copy
