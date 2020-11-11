@@ -166,6 +166,10 @@ class Hotfolders:
                             if not module_path.is_absolute():
                                 module_path = root / module_path
                             ignored.append(str(module_path))
+                            # Do a reload hotfolder deamon when the module file is modified
+                            sys_handler = FSysHandler(only=str(module_path), callback = self.scan )
+                            self.sys_observer.schedule(sys_handler, self.path, True)
+                            # create python module
                             module_name = str(root) + '-' + config_hotfolder.get('title','unknow') + "-" + str(module_path)
                             spec = importlib.util.spec_from_file_location(module_name,module_path)
                             module = importlib.util.module_from_spec(spec)
