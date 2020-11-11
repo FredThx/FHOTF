@@ -160,17 +160,20 @@ class Hotfolders:
                     ignored.append(self.config_file_name)
                     no_empty_file = config_hotfolder.get('no_empty_file')
                     # Option module
-                    try:
-                        module_path = pathlib.Path(config_hotfolder.get('module'))
-                        if not module_path.is_absolute():
-                            module_path = root / module_path
-                        ignored.append(str(module_path))
-                        module_name = str(root) + '-' + config_hotfolder.get('title','unknow') + "-" + str(module_path)
-                        spec = importlib.util.spec_from_file_location(module_name,module_path)
-                        module = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(module)
-                    except Exception as e:
-                        logging.warning(f"Error with module option {module_path} in .hotfolder in {root} : {e}")
+                    if config_hotfolder.get('module'):
+                        try:
+                            module_path = pathlib.Path(config_hotfolder.get('module'))
+                            if not module_path.is_absolute():
+                                module_path = root / module_path
+                            ignored.append(str(module_path))
+                            module_name = str(root) + '-' + config_hotfolder.get('title','unknow') + "-" + str(module_path)
+                            spec = importlib.util.spec_from_file_location(module_name,module_path)
+                            module = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(module)
+                        except Exception as e:
+                            logging.warning(f"Error with module option {config_hotfolder.get('module')} in .hotfolder in {root} : {e}")
+                            module = None
+                    else:
                         module = None
                     #Option Actions
                     actions = list()
