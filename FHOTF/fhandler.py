@@ -24,7 +24,7 @@ class FHandler(PatternMatchingEventHandler):
         '''
         ignored = self.arrange_pattern(ignored, self._ignored)
         only = self.arrange_pattern(only)
-        logging.debug(f"Create PatternMatchingEventHandler with only = {only} and ignored = {ignored}")
+        logging.info(f"Create PatternMatchingEventHandler with only = {only} and ignored = {ignored}")
         PatternMatchingEventHandler.__init__(self, patterns = only, ignore_patterns = ignored, ignore_directories = True)
 
     @staticmethod

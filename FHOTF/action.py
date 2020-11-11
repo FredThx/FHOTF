@@ -12,7 +12,8 @@ class Action(object):
     à partir d'actions lues dans .hotfolder
     '''
     keys_needed = []
-    MODULE_NAME = "$$MODULE_NAME$$"
+    date_format = "_%Y-%m-%d_%H-%M-%S"
+
     def __init__(self, config_actions):
         '''Initialisation
         config_action  :   dict issu de toml
@@ -27,6 +28,15 @@ class Action(object):
         try:
             for key_needed in self.keys_needed:
                 assert key_needed in self.config,f"key error ({key_needed} is require in .hotfolder file : {self.config}"
+            #Look for function options
+            for key, value in self.config.items():
+                if isinstance(value,dict):
+                    try:
+                        the_function = getattr(self.config.get('module'), value.get('function'))
+                        value['function'] = lambda *args : the_function(*args)
+                    except:
+                        logging.warning(f'Error creating function {value}')
+                        self.config[key] = None
             def f_action(filename):
                 if not self.config.get('no_empty_file') or os.path.getsize(filename) > 0:
                     self._get_action()(filename)
@@ -36,20 +46,30 @@ class Action(object):
         except AssertionError:
             pass
 
-    def get_function(self, function_name):
-        '''Return a function named function_name from module
+    def get_config(self, key, filename, default = None):
+        '''Return the value of the property.
+        If is is a function, call it and return the value
         '''
-        if self.config.get('module'):
-            module_path = pathlib.Path(self.config.get('module'))
-            if not module_path.is_absolute():
-                module_path = self.root / module_path
-            spec = importlib.util.spec_from_file_location(self.MODULE_NAME,module_path )
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return getattr(module, function_name)
+        if isinstance(self.config.get(key), dict):
+            _function = self.config.get(key).get('function')
+            _args = self.config.get(key).get('args')
+            if callable(_function):
+                args = []
+                for arg in _args:
+                    args.append(arg.format(**utils.dict_file(filename)))
+                value = _function(*args)
+        else:
+            value = self.config.get(key)
+        logging.debug(f"get_config({key},{repr(filename)},{default}) = '{repr(value)}'")
+        return value or default
 
 class EmailAction(Action):
     ''' Subclass for email action
+    keys of config:
+        - to (needed)   str or function
+        - subject       str or subject
+        - body          str or subject
+        - txt2pdf       boolean or subject
     '''
     keys_needed = ['to']
     default_subject = "Hotfolder alert."
@@ -66,11 +86,11 @@ class EmailAction(Action):
     def _get_action(self):
         ''' Return the email action
         '''
-        to = self.config.get('to')
-        subject = self.config.get('subject',self.default_subject)
-        body = self.config.get('body')
-        txt2pdf = self.config.get('txt2pdf', False)
         def f_email(filename):
+            to = self.get_config('to', filename)
+            subject = self.get_config('subject',filename, self.default_subject)
+            body = self.get_config('body', filename)
+            txt2pdf = self.get_config('txt2pdf', filename, False)
             if txt2pdf and filename[-4:]==".txt":
                 pdf_creator = TXT2PDF.PDFCreator(**self.default_pdf_params)
                 pdf_filename = pdf_creator.generate(filename)
@@ -79,11 +99,15 @@ class EmailAction(Action):
                 os.remove(pdf_filename) # A améliorer car ca génère une detection de nouveau fichier.... qui n'aboutie pas
             else:
                 self.smtp.send(to, subject, body, filename)
-        logging.debug(f"Crt action email (subject:'{subject}')")
+        logging.debug(f"Crt action email")
         return f_email
 
 class DeleteAction(Action):
     '''Subclass for delete action
+    keys of config:
+        - backup            boolean or function
+        - backup_folder     str (a path) or function
+        - add_date          boolean or function
     '''
 
     def __init__(self, config_actions, root):
@@ -97,32 +121,34 @@ class DeleteAction(Action):
     def _get_action(self):
         '''return the delete action
         '''
-        if self.config.get('backup'):
-            backup_folder = pathlib.Path(self.config.get('backup_folder'))
-            if not backup_folder.is_absolute():
-                backup_folder = self.root / backup_folder
-            add_date = self.config.get('add_date')
-            #création si besoin du repertoir backup
-            try:
-                os.mkdir(backup_folder)
-            except FileExistsError:
-                pass
-            def f_move(filename):
-                filename = pathlib.Path(filename)
+        def f_move(filename):
+            filename = pathlib.Path(filename)
+            backup = self.get_config('backup',filename,False)
+            if backup:
+                backup_folder = pathlib.Path(self.get_config('backup_folder',filename))
+                if not backup_folder.is_absolute():
+                    backup_folder = self.root / backup_folder
+                add_date = self.get_config('add_date', filename, False)
+                try:
+                    os.mkdir(backup_folder)
+                except FileExistsError:
+                    pass
                 if add_date:
-                    date = datetime.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
+                    date = datetime.datetime.now().strftime(self.date_format)
                 else:
                     date = ""
                 target = backup_folder / (filename.stem + date + filename.suffix)
                 logging.debug(f"Move file {filename} to {target}")
                 os.rename(filename, target)
-            logging.debug("Crt action delete")
-            return f_move
-        else:
-            return lambda filename : os.remove(filename)
+            else:
+                os.remove(filename)
+        return f_move
 
 class MoveAction(Action):
     '''Subclass for move action
+    keys of config:
+        - destination (str or function)
+        - txt2pdf (TODO)
     '''
     keys_needed = ['destination']
     def __init__(self, config_actions, root):
@@ -136,24 +162,12 @@ class MoveAction(Action):
     def _get_action(self):
         '''Return the move action
         '''
-        destination = self.config.get('destination')
-        if isinstance(destination,dict):
-            the_function = self.get_function(destination.get('function'))
-            destination = lambda *args : pathlib.Path(the_function(*args))
-        else :
-            destination = pathlib.Path(destination)
         def f_move(filename):
             filename = pathlib.Path(filename)
-            if callable(destination):
-                args = []
-                logging.debug("Arguments for lambda fonction")
-                for arg in self.config.get("destination").get('args'):
-                     args.append(arg.format(**utils.dict_file(filename)))
-                logging.debug(args)
-                _destination = destination(*args)
-            if not _destination.is_absolute():
-                _destination = self.root / _destination
-            target = _destination / (filename.stem + filename.suffix)
+            destination = pathlib.Path(self.get_config('destination', filename))
+            if not destination.is_absolute():
+                destination = self.root / destination
+            target = destination / (filename.stem + filename.suffix)
             logging.debug(f"Move file {filename} to {target}")
             try:
                 os.rename(filename, target)
@@ -164,6 +178,9 @@ class MoveAction(Action):
 
 class CopyAction(Action):
     '''Sub class copy action
+    keys of config:
+        - destination (needed) str or function
+        - txt2pdf (TODO)
     '''
     keys_needed = ['destination']
     def __init__(self, config_actions, root):
@@ -177,32 +194,37 @@ class CopyAction(Action):
     def _get_action(self):
         '''Return the copy action
         '''
-        destination = pathlib.Path(self.config.get('destination'))
-        if not destination.is_absolute():
-            destination = self.root / destination
         def f_copy(filename):
             filename = pathlib.Path(filename)
-            target = destination / (filename.stem + filename.suffix)
-            logging.debug(f"Copy file {filename} to {target}")
-            shutil.copyfile(filename,target)
+            destination = pathlib.Path(self.get_config('destination', filename))
+            if destination:
+                if not destination.is_absolute():
+                    destination = self.root / destination
+                target = destination / (filename.stem + filename.suffix)
+                logging.debug(f"Copy file {filename} to {target}")
+                shutil.copyfile(filename,target)
         logging.debug("Crt action copy")
         return f_copy
 
 class CmdAction(Action):
     '''Sub class execute cmd action
+    keys of config:
+        - cmd   (needed) str or function
     '''
     key_needed = ['cmd']
 
     def _get_action(self):
         '''Return the cmd action
         '''
-        cmd = self.config.get('cmd')
         def f_cmd(filename):
-            _cmd = cmd.format(**utils.dict_file(filename))
-            logging.debug(f"Cmd start : {_cmd}")
-            completed_process = subprocess.run(_cmd)
-            if completed_process.returncode == 0:
-                logging.debug(f"Cmd ok : {completed_process.stdout}")
-            else:
-                logging.error("Cmd error : {completed_process.stderr}")
+            cmd = self.get_config('cmd', filename)
+            if cmd:
+                logging.debug(f"cmd : {repr(cmd)}, filename : {repr(filename)}")
+                _cmd = cmd.format(**utils.dict_file(filename))
+                logging.debug(f"Cmd start : {_cmd}")
+                completed_process = subprocess.run(_cmd)
+                if completed_process.returncode == 0:
+                    logging.debug(f"Cmd ok : {completed_process.stdout}")
+                else:
+                    logging.error("Cmd error : {completed_process.stderr}")
         return f_cmd

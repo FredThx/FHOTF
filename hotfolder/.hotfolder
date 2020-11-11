@@ -6,7 +6,7 @@
 # Syntaxe : TOML
 #
 
-title = "Hotfolder"
+title = "Hotfolder de test"
 
 #Général information
 [hotfolder]
@@ -20,9 +20,33 @@ module = "fonctions.py"
 #Actions générées
 [actions]
 
+  [actions.before]
+  [actions.before.cmd]
+    function = "get_cmd"
+    args = ["{filename}"]
+
+    [actions.copy.destination]
+      function = "get_destination_path_for_copy"
+      args = ['fileneme']
+
   [actions.move]
   txt2pdf = true
-  parse_pdf = true
   [actions.move.destination]
     function = "get_dest_path"
     args = ["{filename}","{suffix}"]
+
+    [actions.email]
+    no_empty_file = true
+    to = "fredthx@gmail.com"
+    subject = "Hotfolder detect a new file : {filename}"
+    body ='''
+    Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
+    Ci-joint ce fichier {suffix}.
+
+    Nom du fichier sans l'extention : {basename}
+
+    Salut.'''
+    
+    [actions.email.txt2pdf]
+      function = 'get_txt2pdf'
+      args = ['{filename}']

@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*
 
 
-import os, pathlib, datetime, logging, time
+import os, pathlib, datetime, logging, time, importlib
 
 import toml
 
@@ -138,6 +138,7 @@ class Hotfolders:
             if self.config_file_name in files:
                 logging.debug(f"{self.config_file_name} found in {root}")
                 config_file = root / pathlib.Path(self.config_file_name)
+                #Decode TOML
                 try:
                     config=toml.load(config_file)
                     config_hotfolder=config['hotfolder']
@@ -150,6 +151,7 @@ class Hotfolders:
                 except Exception as e:
                     logging.error(f"Unknow Error on {config_file} : {e}")
                 else:
+                    # globals options (from hotfolder)
                     recursive = config_hotfolder.get('recursive', False)
                     delay = config_hotfolder.get('delay')
                     timeout = config_hotfolder.get('timeout')
@@ -157,9 +159,20 @@ class Hotfolders:
                     only = config_hotfolder.get('only', [])
                     ignored.append(self.config_file_name)
                     no_empty_file = config_hotfolder.get('no_empty_file')
-                    module = config_hotfolder.get('module')
-                    if module:
-                        ignored.append(str(root / module))
+                    # Option module
+                    try:
+                        module_path = pathlib.Path(config_hotfolder.get('module'))
+                        if not module_path.is_absolute():
+                            module_path = root / module_path
+                        ignored.append(str(module_path))
+                        module_name = str(root) + '-' + config_hotfolder.get('title','unknow') + "-" + str(module_path)
+                        spec = importlib.util.spec_from_file_location(module_name,module_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                    except Exception as e:
+                        logging.warning(f"Error with module option {module_path} in .hotfolder in {root} : {e}")
+                        module = None
+                    #Option Actions
                     actions = list()
                     for keyword in sorted([k for k in config_actions if k in self.actions_keywords], key = lambda k:self.actions_keywords.index(k)):
                         action = None
