@@ -39,7 +39,10 @@ class Action(object):
                         self.config[key] = None
             def f_action(filename):
                 if not self.config.get('no_empty_file') or os.path.getsize(filename) > 0:
-                    self._get_action()(filename)
+                    try:
+                        self._get_action()(filename)
+                    except Exception as e:
+                        logging.error(f"Error during action {self} with file : {filename}:\n {e}")
                 else:
                     logging.debug(f"File is empty : cancel action {self}")
             return f_action

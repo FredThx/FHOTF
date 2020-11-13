@@ -30,7 +30,7 @@ parser.add_argument("-a","--nostarttls", help = "not use starttls", action="stor
 args = parser.parse_args()
 
 if args.verbose:
-    my_logging(console_level = DEBUG, logfile_level = INFO, details = True, name_logfile = args.log)
+    my_logging(console_level = DEBUG, logfile_level = DEBUG, details = True, name_logfile = args.log)
 else:
     my_logging(console_level = INFO, logfile_level = INFO, details = False, name_logfile = args.log)
 
