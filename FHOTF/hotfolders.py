@@ -167,6 +167,7 @@ class Hotfolders:
                                 module_path = root / module_path
                             ignored.append(str(module_path))
                             # Do a reload hotfolder deamon when the module file is modified
+                            logging.debug(f"Creation deamon reload only = {str(module_path)}")
                             sys_handler = FSysHandler(only=str(module_path), callback = self.scan )
                             self.sys_observer.schedule(sys_handler, self.path, True)
                             # create python module

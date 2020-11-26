@@ -177,15 +177,18 @@ class MoveAction(Action):
         def f_move(filename):
             filename = pathlib.Path(filename)
             destination = pathlib.Path(self.get_config('destination', filename))
-            if not destination.is_absolute():
-                destination = self.root / destination
-            target = destination / (filename.stem + filename.suffix)
-            logging.debug(f"Move file {filename} to {target}")
-            try:
-                os.rename(filename, target)
-            except OSError:
-                os.makedirs(os.path.dirname(target), exist_ok=True)
-                shutil.move(filename,target)
+            if destination:
+                if not destination.is_absolute():
+                    destination = self.root / destination
+                target = destination / (filename.stem + filename.suffix)
+                logging.debug(f"Move file {filename} to {target}")
+                try:
+                    os.rename(filename, target)
+                except OSError:
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    shutil.move(filename,target)
+            else:
+                logging.warning(f"Destination is {destination} => no move")
         logging.debug("Crt action move")
         return f_move
 
@@ -217,6 +220,8 @@ class CopyAction(Action):
                 logging.debug(f"Copy file {filename} to {target}")
                 os.makedirs(os.path.dirname(target), exist_ok=True)
                 shutil.copyfile(filename,target)
+            else:
+                logging.warning(f"Destination is {destination} => no copy")
         logging.debug("Crt action copy")
         return f_copy
 

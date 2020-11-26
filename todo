@@ -1,7 +1,5 @@
 TODO
 
 - activer les option -delete et -store
-- création d'autres actions (move, copy, script)
 - deamon on_change, on_delete
-- parse le fichier pour y trouver une émail (ex : pdf avec adresse) : pdfminer.six
-- show log
+- show log with systray
