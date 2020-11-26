@@ -24,7 +24,7 @@ class FHandler(PatternMatchingEventHandler):
         '''
         ignored = self.arrange_pattern(ignored, self._ignored)
         only = self.arrange_pattern(only)
-        logging.debug(f"Create PatternMatchingEventHandler with only = {only} and ignored = {ignored}")
+        logging.info(f"Create PatternMatchingEventHandler with only = {only} and ignored = {ignored}")
         PatternMatchingEventHandler.__init__(self, patterns = only, ignore_patterns = ignored, ignore_directories = True)
 
     @staticmethod
@@ -50,12 +50,13 @@ class FDebounceHandler(FHandler):
     # Une extension pour renommer le fichier
     _ = "_$8$_"
 
-    def __init__(self, actions = None, delay = 15, timeout = 600, ignored = None, only = None):
+    def __init__(self, actions = None, delay = 15, timeout = 600, ignored = None, only = None, no_empty_file = False):
         '''
             actions    :   function callback(filename) or listof
             delay       :   temps (second) entre chaque test
             timeout     :   temps (second) entre la creation et l'abandon de l'action
             ignored     :   si None : les valeurs par default, sinon list des expressions régulière à ignorer
+            only        :   None ou list de pattern à ignorer
         '''
         self.delay = delay
         self.timeout = timeout
@@ -66,6 +67,7 @@ class FDebounceHandler(FHandler):
             else:
                 self.action.append(actions)
         FHandler.__init__(self, ignored, only)
+        self.no_empty_file = no_empty_file
 
     def on_created(self, event):
         logging.info(event)
@@ -119,8 +121,11 @@ class FDebounceHandler(FHandler):
             logging.debug("The file has disappeared!")
         elif file_lock and size_change:
             logging.debug("Timeout expected.")
+        elif self.no_empty_file and size == 0:
+            logging.debug("The file if empty : abort")
         else:
             logging.debug(f"Creation of {filename} is valid.")
+            logging.debug(f"Actions : {self.actions}")
             for callback in self.actions:
                 callback(filename)
 

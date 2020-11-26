@@ -3,3 +3,4 @@ watchdog
 toml
 PySimpleGUIQt
 keyring
+reportlab

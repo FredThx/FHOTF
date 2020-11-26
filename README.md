@@ -2,12 +2,16 @@
 Python scripts to create hotfolders.
 (windows or linux system)
 
-Currently :
-- detect creation or move of files
-- send file by email (or not)
-- delete or backup file (or not)
+Detect files creation (or move) on folders
+##### Possibles actions
+- start os command (before)
+- copy file to destination
+- send file by email
+- move file to destination
+- delete (optionnaly do a backup)
+- start os command (after)
 
-optionnal :
+##### optionnal :
 - system tray icon UI
 - autosave parameters and credentials (keyring)
 
@@ -23,32 +27,42 @@ pip install -r requirements.txt
 
 ### Configuration
 
-In each folder you want to make an hotfolder : a .hotfolder file
+In each folder you want to make an hotfolder: create a .hotfolder file
 
 ```toml
-# Fichier de configuration pour FHOTF
+# Configuration file for FHOTF
 #
-# Ce fichier doit être nommé '.hotfolder'
-# Il s'applique au repertoir dans lequel il est présent
+# This file should be named '.hotfolder'
+# It is applied to itself
 #
-# Syntaxe : TOML
+# Syntax : TOML
 #
 
 title = "Hotfolder"
 
-#Général information
+#General information
 [hotfolder]
 delay = 15
 timeout = 600
 ignored = ['*.tmp']
 only = ['*.txt']
+no_empty_file = true
+module = "mymodule.py"
 
-#Actions générées
+#Actions
 [actions]
 
+  [actions.before]
+  cmd = 'my_script'
+
+  [actions.copy]
+  destination = '/home/destination/'
+
   [actions.email]
+  no_empty_file = true
+  txt2pdf = true
   to = "fredthx@gmail.com"
-  subject = "Hotfolder detect a new file : {filename}"
+  subject = "Hotfolder a détecté un nouveau fichier : {filename}"
   body ='''
   Un nouveau fichier {name} est arrivé sur le hotfolder{path}.
   Ci-joint ce fichier {suffix}.
@@ -57,11 +71,70 @@ only = ['*.txt']
 
   Salut.'''
 
+  [actions.move]
+  txt2pdf = true
+  [actions.move.destination]
+    function = "get_dest_path"
+    args = ["{filename}"]
+
+
   [actions.delete]
   backup = true
   backup_folder = './sav/'
   add_date = true
 
+  [actions.after]
+  cmd = 'my_script2'
+```
+Strings can be formated with Literal String interpolation with
+
+```python
+{
+     'filename' : str(filename),
+     'name' : filename.name,
+     'suffix' : filename.suffix,
+     'path' : filename.drive+filename.stem,
+     'basename' : filename.stem,
+     'path_basename' : filename.parent/filename.stem
+     }
+```
+
+All properties can be a python function :
+- in the hotfolder, create a python script (ex : mymodule.py)
+
+```python
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def get_dest_path(filename, suffix):
+    if suffix == ".txt":
+        return './txt/'
+    else:
+        return './olfa/'
+
+def get_cmd(filename):
+    return f"notepad {filename}"
+
+def get_destination_path_for_copy(filename):
+    return './olfa/'
+
+def get_txt2pdf(filename):
+    return False
+
+def get_dest_path(filename, suffix):
+    if suffix == ".txt":
+        return './txt/'
+    else:
+        return './olfa/'
+
+def get_cmd(filename):
+    return f"notepad {filename}"
+
+def get_destination_path_for_copy(filename):
+    return './olfa/'
+
+def get_txt2pdf(filename):
+    return filename == "mon_fichier.txt"
 ```
 
 ### Command
@@ -88,12 +161,11 @@ optional arguments:
                         a key for settings
   -s, --store           store command line parameters
   -d, --delete          delete all saved parameters
-
+  -a  --nostarttls      not use starttls
 ```
-or
-For a gui system just ```python fhotf.py``` and do the configuration with the SystemTray icon.
+Or for a gui system just execute ```python fhotf.py``` and do the configuration with the SystemTray icon.
 
-For command line, execute the command with all parameters a first time with ```--store``` argument. The next time only ```python fhotf.py``` is needed.
+For command line, execute the command with all parameters for the first time with ```--store``` argument and for the next time only execute ```python fhotf.py``` is needed.
 
 
 ## license

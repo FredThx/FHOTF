@@ -10,7 +10,7 @@ title = "Hotfolder"
 
 #Général information
 [hotfolder]
-delay = 15
+delay = 5
 timeout = 600
 ignored = ['*.tmp']
 only = ['*.txt']
@@ -19,7 +19,7 @@ only = ['*.txt']
 [actions]
 
   [actions.email]
-  to = "fredthx@gmail.com"
+  to = "jcoopmann@hexanet.fr"
   subject = "Hotfolder detect a new file : {filename}"
   body ='''
   Un nouveau fichier {name} est arrivé sur le hotfolder{path}.

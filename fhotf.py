@@ -20,19 +20,20 @@ parser.add_argument("-u","--user", help="SMTP sender user", action="store")
 parser.add_argument("-w","--password", help = "SMTP sender password", action="store")
 parser.add_argument("-f","--path", help = "Root path for hotfolders", action="store")
 parser.add_argument("-v","--verbose", help = "Debug mode", action="store_true")
-parser.add_argument("-l","--log", help = "file log name", action="store_true")
+parser.add_argument("-l","--log", help = "file log name", action="store")
 parser.add_argument("-n","--nogui", help = "no systray", action="store_true")
 parser.add_argument("-k","--settingskey", help = "a key for settings", action="store")
 parser.add_argument("-s","--store", help = "store command line parameters", action="store_true")
 parser.add_argument("-d","--delete", help = "delete all saved parameters", action="store_true")
+parser.add_argument("-a","--nostarttls", help = "not use starttls", action="store_false")
 
 args = parser.parse_args()
 
 if args.verbose:
-    my_logging(console_level = DEBUG, logfile_level = INFO, details = True, name_logfile = args.log)
+    my_logging(console_level = DEBUG, logfile_level = DEBUG, details = True, name_logfile = args.log)
 else:
     my_logging(console_level = INFO, logfile_level = INFO, details = False, name_logfile = args.log)
 
-hotfolders = Hotfolders(args.path, args.host, args.port, args.email, args.user, args.password, gui = not args.nogui, settings_key = args.settingskey, settings_store = args.store, settings_delete = args.delete)
+hotfolders = Hotfolders(args.path, args.host, args.port, args.email, args.user, args.password, gui = not args.nogui, settings_key = args.settingskey, settings_store = args.store, settings_delete = args.delete, starttls = args.nostarttls)
 
 hotfolders.run()

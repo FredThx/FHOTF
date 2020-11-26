@@ -6,24 +6,27 @@ from email import encoders
 from pathlib import Path
 import logging
 
+import FHOTF.utils as utils
 
 class Smtp:
     ''' Un client smtp
     '''
 
-    def __init__(self, host, port = 587, sender_address = None, sender = None, sender_pass = None):
+    def __init__(self, host, port = 587, sender_address = None, sender = None, sender_pass = None, starttls = True):
         '''Initialisation
         - host            :     hostname or IP
         - port            :     TCP-IP port
         - sender_address  :     ex : "toto@gmail.com"
         - sender_pass     :     password
         - sender          :     sender user (if != sender_address)
+        - starttls        :     if True (default), use starttls before send email
         '''
         self.host = host
         self.port = port
         self.sender_address = sender_address
         self.sender = sender
         self.sender_pass = sender_pass
+        self.starttls = starttls
         logging.debug(f"{self} created.")
 
     def __repr__(self):
@@ -35,7 +38,7 @@ class Smtp:
         return True si ok
         '''
         if attach_file_name:
-            dict_file = self.dict_file(attach_file_name)
+            dict_file = utils.dict_file(attach_file_name)
             subject  = subject.format(**dict_file)
             body = body.format(**dict_file)
         if sender_address is None:
@@ -60,7 +63,8 @@ class Smtp:
             #logging.debug(f"Smtp session : host:{self.host}, port:{self.port}, sender:{self.sender}, sender_pass:{self.sender_pass}  ")
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
-            session.starttls() #enable security
+            if self.starttls:
+                session.starttls()
             if self.sender:
                 try:
                     logging.debug(f"login{self.sender}")
@@ -75,16 +79,6 @@ class Smtp:
             logging.error(f"Smtp error : {e}")
 
 
-    @staticmethod
-    def dict_file(filename):
-        filename = Path(filename)
-        return {
-            'filename' : str(filename),
-            'name' : filename.name,
-            'suffix' : filename.suffix,
-            'path' : filename.parent,
-            'basename' : filename.stem,
-            }
 
 class NoneSmtp():
     '''A do-nothig Smtp class
