@@ -25,10 +25,10 @@ class Hotfolders:
 
     config_file_name = '.hotfolder'
     default_settings_key = 'FHOTKEY'
-    saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_user_addr', 'smtp_user', 'smtp_password']
+    saved_properties = ['path','smtp_host', 'smtp_port', 'smtp_sender_addr', 'smtp_user', 'smtp_password']
     actions_keywords = ['copy', 'before', 'email', 'move', 'delete', 'after'] # Order is important !
 
-    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_user_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False, starttls = True):
+    def __init__(self, path = None, smtp_host = None, smtp_port = None, smtp_sender_addr = None, smtp_user = None, smtp_password = None, gui = False, settings_key = None, settings_store = False,settings_delete = False, starttls = True):
         '''
         path    :   root path
         smtp    :   Smtp (FHOTF.smtp) instance
@@ -42,23 +42,26 @@ class Hotfolders:
             self.smtp_host = smtp_host
         if smtp_port:
             self.smtp_port = smtp_port
-        if smtp_user_addr:
-            self.smtp_user_addr = smtp_user
+        if not smtp_sender_addr:
+            self.smtp_sender_addr = smtp_user
+        else:
+            self.smtp_sender_addr = smtp_sender_addr
         if smtp_user:
             self.smtp_user = smtp_user
         if smtp_password:
             self.smtp_password = smtp_password
         if self.smtp_host:
-            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_user_addr, self.smtp_user, self.smtp_password, starttls)
+            self.smtp = Smtp(self.smtp_host, self.smtp_port, self.smtp_sender_addr, self.smtp_user, self.smtp_password, starttls)
         else:
             self.smtp = NoneSmtp()
         self.gui = gui
         if not self.path:
             self.path = '.'
-        if settings_store:
-            self.store_settings()
         if settings_delete:
             self.delete_settings()
+        if settings_store:
+            self.delete_settings()
+            self.store_settings()
         self.observer = PollingObserver()
         self.sys_observer = PollingObserver()
         logging.info("WatchdogServices Initialised")

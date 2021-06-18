@@ -31,9 +31,20 @@ args = parser.parse_args()
 
 if args.verbose:
     my_logging(console_level = DEBUG, logfile_level = DEBUG, details = True, name_logfile = args.log)
+    logging.debug(args)
 else:
     my_logging(console_level = INFO, logfile_level = INFO, details = False, name_logfile = args.log)
 
-hotfolders = Hotfolders(args.path, args.host, args.port, args.email, args.user, args.password, gui = not args.nogui, settings_key = args.settingskey, settings_store = args.store, settings_delete = args.delete, starttls = args.nostarttls)
+hotfolders = Hotfolders(path = args.path, \
+                        smtp_host = args.host, \
+                        smtp_port =  args.port, \
+                        smtp_sender_addr = args.email, \
+                        smtp_user = args.user, \
+                        smtp_password = args.password, \
+                        gui = not args.nogui, \
+                        settings_key = args.settingskey, \
+                        settings_store = args.store, \
+                        settings_delete = args.delete, \
+                        starttls = args.nostarttls)
 
 hotfolders.run()

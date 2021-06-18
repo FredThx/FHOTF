@@ -30,7 +30,7 @@ class Smtp:
         logging.debug(f"{self} created.")
 
     def __repr__(self):
-        return f"Smpt({self.host}:{self.port}(user:{self.sender}/{self.sender_pass}))"
+        return f"Smpt({self.host}:{self.port}(user:{self.sender}/{self.sender_pass}, sender:{self.sender_address}))"
 
 
     def send(self, receiver_address, subject = "", body = "", attach_file_name = None, sender_address = None):
@@ -42,7 +42,7 @@ class Smtp:
             subject  = subject.format(**dict_file)
             body = body.format(**dict_file)
         if sender_address is None:
-            sender_address = self.sender_address
+            sender_address = self.sender_address or self.sender
         #Setup the MIME
         message = MIMEMultipart()
         message['From'] = sender_address
@@ -60,7 +60,7 @@ class Smtp:
         text = message.as_string()
         #Create SMTP session for sending the mail
         try:
-            #logging.debug(f"Smtp session : host:{self.host}, port:{self.port}, sender:{self.sender}, sender_pass:{self.sender_pass}  ")
+            logging.debug(f"Smtp session : {self}")
             session = smtplib.SMTP(self.host, self.port)
             session.ehlo()
             if self.starttls:

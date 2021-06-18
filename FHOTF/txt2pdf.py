@@ -281,3 +281,16 @@ class PDFCreator(object):
             else:
                 output = 'output.pdf'
         return output
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(
+                prog='python txt2pdf.py',
+                description = 'Converte a txt file to pdf.')
+    parser.add_argument("file", help="txt file ", nargs = 1, action="store")
+    res = parser.parse_args()
+
+    pdf_creator = PDFCreator(font_size = 7.0, margin_left = 0.5, margin_right = 0.0)
+    if res.file:
+        pdf_creator.generate(res.file[0])
