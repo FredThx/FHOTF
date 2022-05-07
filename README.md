@@ -54,6 +54,10 @@ module = "mymodule.py"
 
   [actions.before]
   cmd = 'my_script'
+  or
+  [actions.before.cmd]
+    function = "my_python_function_with_None_return_in_mymodule"
+    args = ["{filename}"]
 
   [actions.copy]
   destination = '/home/destination/'
