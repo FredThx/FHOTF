@@ -202,7 +202,7 @@ class Hotfolders:
                         if action:
                             actions.append(action.get_action())
                     handler = FDebounceHandler(actions, delay, timeout, ignored, only,no_empty_file)
-                    self.observer.schedule(handler, root, recursive)
+                    self.observer.schedule(handler, root, recursive=recursive)
         logging.info("\nScan finished.\n")
 
     def version(self):
@@ -212,4 +212,5 @@ class Hotfolders:
         ''' Va créer un observer pour la détection des changements dans les fichiers '.hotfolder'
         '''
         sys_handler = FSysHandler(only=self.config_file_name, callback = self.scan)
-        self.sys_observer.schedule(sys_handler, self.path, True)
+        self.sys_observer.schedule(sys_handler, self.path, recursive=True)
+
