@@ -4,3 +4,9 @@ toml
 PySimpleGUIQt
 keyring
 reportlab
+requests
+# For ARCH_PDF
+pdfminer
+pdfminer.six
+pdfrw
+sqlparse
